@@ -14,7 +14,7 @@ router.get('/user/profile', verifyToken, async (req,res) =>{
     if(req.tokenStatus!='valid')
       return res.status(401).json({message:"Authentication failed"});
 
-    const usersFound=await new User().getProfileById(req.id)  
+    const usersFound=await new User().getProfileById(req.idFromToken)  
     if(usersFound.length<=0)
       return res.status(403).json({message:"User not found"});
     else  
@@ -31,13 +31,13 @@ router.post('/user/delete', verifyToken, async (req,res) =>{
     if(!userId)
       return res.status(404).json({message:'Incomplete data was provided.'});
 
-    if(req.tokenStatus!='valid' || userId!=req.id)
+    if(req.tokenStatus!='valid' || userId!=req.idFromToken)
       return res.status(401).json({message:"Authentication failed"});
 
     if(await new User().deleteUser(userId))
       res.status(200).send('OK')
     else
-      return res.status(400).json({message:'Your request can not be authenticated. Try again.'});
+      return res.status(400).json({message:'Your request can not be completed. Try again.'});
   }
   catch (err) {
     console.log(err);

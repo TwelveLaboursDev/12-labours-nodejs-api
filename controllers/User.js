@@ -74,19 +74,19 @@ class User {
     where LOWER(email)='${email.toLowerCase()}'`
     
     let results = await db.query(query).catch(console.log);
-    return results.rowCount>0 ? results.rows[0] : null;  //results.rowCount>0;
+    return results.rowCount>0 ? results.rows[0] : null;  
   }
 
   async activateLocal(userId){
     const query=
-      `update local_users set is_Active=true where user_id=${userId}`
+      `update local_users set is_Active=true, updated=Now() where user_id=${userId}`
     let results = await db.query(query).catch(console.log);
     return results.rowCount==1;
   }
 
   async changePassword(userId,oldPassword,newPassword){
     const query=
-    `update local_users set password='${newPassword}' where user_id=${userId} and password='${oldPassword}'`
+    `update local_users set password='${newPassword}', updated=Now() where user_id=${userId} and password='${oldPassword}'`
     let results = await db.query(query).catch(console.log);
     return results.rowCount==1;
   }

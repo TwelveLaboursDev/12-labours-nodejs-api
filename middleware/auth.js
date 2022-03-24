@@ -12,7 +12,7 @@ function signUserToken (id,email,expiry) {
   const expiryTime= expiry ? expiry : '1200s'  //20 minutes default expiry time 
 
   return jwt.sign(
-    {id: id, email: email},
+    {idFromToken: id, emailFromToken: email},
     SECRET_KEY,
     {expiresIn:expiryTime}
   )
@@ -31,8 +31,8 @@ function verifyToken(req, res, next) {
       if(err.name === 'TokenExpiredError'){
         const payloadExpired = jwt.verify(token, SECRET_KEY, {ignoreExpiration: true} );
         req.tokenStatus='expired'
-        req.id=payloadExpired.id;
-        req.email=payloadExpired.email;
+        req.idFromToken=payloadExpired.idFromToken;
+        req.emailFromToken=payloadExpired.emailFromToken;
       }
       else{
         return res.status(401).json({message:'Unauthorized request'});
@@ -40,8 +40,8 @@ function verifyToken(req, res, next) {
     }
     else{
       req.tokenStatus='valid'
-      req.id=payload.id;
-      req.email=payload.email;
+      req.idFromToken=payload.idFromToken;
+      req.emailFromToken=payload.emailFromToken;
     }
     next();
   });
