@@ -11,14 +11,14 @@ router.get('/user/types', async(req,res)=>{
 
 router.get('/user/profile', verifyToken, async (req,res) =>{ 
   try{
-    if(req.tokenStatus!='valid')
-      return res.status(401).json({message:"Authentication failed"});
+    if(req.tokenStatus=='expired')
+      return res.status(401).json({message:"Token expired"});
 
-    const usersFound=await new User().getProfileById(req.idFromToken)  
-    if(usersFound.length<=0)
-      return res.status(403).json({message:"User not found"});
+    const user=await new User().getProfileById(req.idFromToken)  
+    if(user)
+      return res.status(200).send({user:user});
     else  
-      res.status(200).send({user:usersFound[0]});
+      return res.status(403).json({message:"User not found"});
   }
   catch (err) {
     console.log(err);
@@ -31,7 +31,7 @@ router.post('/user/delete', verifyToken, async (req,res) =>{
     if(!userId)
       return res.status(404).json({message:'Incomplete data was provided.'});
 
-    if(req.tokenStatus!='valid' || userId!=req.idFromToken)
+    if(req.tokenStatus=='expired' || userId!=req.idFromToken)
       return res.status(401).json({message:"Authentication failed"});
 
     if(await new User().deleteUser(userId))
@@ -44,4 +44,33 @@ router.post('/user/delete', verifyToken, async (req,res) =>{
   }
 });
 
-module.exports=router;
+async function addNewUser (req, res, next)  {
+  try{
+    const {userInfo,strategy}=req.body 
+    
+    if(!userInfo || !userInfo.email || !userInfo.firstName || !userInfo.lastName || !userInfo.title)
+      return res.status(400).json({message:'User Information is missing'});
+    
+    const userObj=new User();
+    if(await userObj.emailExists(userInfo.email)){
+      return res.status(409).json({message:'Email already exists'});
+    }
+
+    const newUserId=await userObj.createUser(userInfo,strategy)
+    if(!newUserId)
+      return res.status(404).json({message:'An error occured while creating user. Try again.'});
+
+    req.newUserId=newUserId;
+    next();
+  }
+  catch(err){
+    console.log(err)
+  }
+};
+
+
+module.exports = { 
+  router:router,
+  addNewUser:addNewUser
+}
+

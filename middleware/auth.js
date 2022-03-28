@@ -29,54 +29,59 @@ function verifyToken(req, res, next) {
   jwt.verify(token, SECRET_KEY,(err, payload)=> {
     if(err){
       if(err.name === 'TokenExpiredError'){
-        const payloadExpired = jwt.verify(token, SECRET_KEY, {ignoreExpiration: true} );
+        payload = jwt.verify(token, SECRET_KEY, {ignoreExpiration: true} );
         req.tokenStatus='expired'
-        req.idFromToken=payloadExpired.idFromToken;
-        req.emailFromToken=payloadExpired.emailFromToken;
       }
       else{
         return res.status(401).json({message:'Unauthorized request'});
       }
     }
-    else{
-      req.tokenStatus='valid'
-      req.idFromToken=payload.idFromToken;
-      req.emailFromToken=payload.emailFromToken;
-    }
+    req.tokenStatus='valid'
+    req.idFromToken=payload.idFromToken;
+    req.emailFromToken=payload.emailFromToken;
     next();
   });
 }
 
 
 async function getGoogleToken(req, res, next) {
-  const googleCode=req.body.code;
-  console.log(googleCode);
-  console.log('--------')
-  if(!googleCode)
-    return res.status(400).send("Invalid request. Google code not provided");
+  try{
+    const googleCode=req.body.code;
+    if(!googleCode)
+      return res.status(400).json({message:"Invalid request. Google code not provided"}); 
 
-  googleClient.getToken(googleCode, function (err, tokenInfo) {
-    if (err)
-      //return res.status(403).send(JSON.stringify(err));   ///res avaialble????? retutrn????
-      console.log(JSON.stringify(err))
-
-    verifyGoogleToken(tokenInfo.id_token).catch(console.error);
-
-    req.access_token=tokenInfo.access_token;
-  })
-
-  next();
+    const {tokens}=await googleClient.getToken(googleCode);     
+    const payload=await verifyGoogleIdToken(tokens.id_token);
+    if(!payload)
+      return res.status(403).json({message:"Authentication failed"});
+ 
+    req.googleProfile={'email':payload.email,'googleId':payload.sub,'firstName':payload.given_name, 'lastName':payload.family_name}
+    next();
+  }
+  catch(err){
+    return res.status(403).json({message:"Authentication failed"});
+  }
 }
 
-async function verifyGoogleToken(token) {
-  const ticket = await googleClient.verifyIdToken({
-    idToken: token,
-    audience: clientId
-  });
-  const payload = ticket.getPayload();
-  //const userid = payload['sub'];
-  console.log(payload)
-  //return payload;
+async function verifyGoogleIdToken(token) {
+  try{
+    /* There are number of ways to decode and verify token, some recommend writing your own code, to save additional network request. */
+    /* But Google documentation here https://developers.google.com/identity/sign-in/web/backend-auth suggests that, 
+    ...  
+    Rather than writing your own code to perform these verification steps, we strongly recommend using a Google API client library for your platform.
+    Using one of the Google API Client Libraries (e.g. Java, Node.js, PHP, Python) is the recommended way to validate Google ID tokens in a production environment.
+    ....
+    */
+    const ticket = await googleClient.verifyIdToken({
+      idToken: token,
+      audience: clientId
+    });
+    const payload = ticket.getPayload();
+    return payload;
+  }
+  catch(err){
+    console.log(err);
+  }
 }
 
 module.exports = {verifyToken,getGoogleToken,signUserToken};

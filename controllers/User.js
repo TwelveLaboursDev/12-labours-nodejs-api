@@ -4,12 +4,6 @@ const db = require("../config/db");
 db.connect();
 
 class User {
-  async getAll(){
-    const query=
-      `select * from users`;
-    let results = await db.query(query).catch(console.log);
-    return results.rows;
-  }
 
   async getTypes(){
     const query=
@@ -23,7 +17,7 @@ class User {
       `select u.user_id from users u inner join local_users lu ON u.user_id=lu.user_id
       where lower(u.email)=lower('${email}') and lu.password='${pass}' and lu.is_Active=true`;
     let results = await db.query(query).catch(console.log);
-    return results.rows;
+    return (results.rowCount==1 ? (results.rows)[0] : null); 
   }
 
   async authenticateGoogle(email,googleId){
@@ -31,7 +25,7 @@ class User {
       `select u.user_id as user_id from users u inner join google_users gu ON u.user_id=gu.user_id
       where lower(u.email)=lower('${email}') and gu.google_id='${googleId}'`;
     let results = await db.query(query).catch(console.log);
-    return results.rows;
+    return (results.rowCount==1 ? (results.rows)[0] : null); 
   }
 
   async getProfileById(userId){
@@ -43,7 +37,7 @@ class User {
       left join hospitals h ON u.hospital_id=h.hospital_id
       where user_id='${userId}'`;
     let results = await db.query(query).catch(console.log);
-    return results.rows;
+    return (results.rowCount==1 ? (results.rows)[0] : null ); 
   }
 
   async createUser(userInfo,strategy){
@@ -52,20 +46,18 @@ class User {
       select ut.type_id,'${userInfo.email}','${userInfo.title}','${userInfo.firstName}','${userInfo.lastName}','${userInfo.profession}',${userInfo.institutionId},'${userInfo.hpi}',${userInfo.hospitalId},'${userInfo.nhi}',${userInfo.dhbId},Now()
       from user_types ut where LOWER(ut.type_name)='${userInfo.userTypeName.toLowerCase()}'`;
     let results = await db.query(query).catch(console.log);
-    if(results.rowCount==1){
-      let newUser=await db.query(`select user_id from users where lower(email)=lower('${userInfo.email}')`).catch(console.log)
-      const newUserId=newUser.rows[0].user_id
-      const query2= (strategy==='local')?
-        `insert into local_users (user_id, password, is_Active,created)
-          values (${newUserId},'${userInfo.password}',false,Now())` 
-        : 
-        `insert into google_users (user_id, google_id,created)
-        values (${newUserId},'${userInfo.googleId}',Now())`
-      let results2 = await db.query(query2).catch(console.log);
-      return (results2.rowCount==1 ? newUserId : 0 ); 
-    }
+    if(results.rowCount!=1) return null;
 
-    return 0;
+    let newUser=await db.query(`select user_id from users where lower(email)=lower('${userInfo.email}')`).catch(console.log)
+    const newUserId=newUser.rows[0].user_id
+    const query2= (strategy==='local')?
+      `insert into local_users (user_id, password, is_Active,created)
+        values (${newUserId},'${userInfo.password}',false,Now())` 
+      : 
+      `insert into google_users (user_id, google_id,created)
+      values (${newUserId},'${userInfo.googleId}',Now())`
+    let results2 = await db.query(query2).catch(console.log);
+    return (results2.rowCount==1 ? newUserId : null); 
   }
 
   async localUserExists(email){
@@ -77,10 +69,17 @@ class User {
     return results.rowCount>0 ? results.rows[0] : null;  
   }
 
+  async emailExists(email){
+    const query=`select user_id from users where LOWER(email)='${email.toLowerCase()}'`
+    let results = await db.query(query).catch(console.log);
+    return (results.rowCount==1 ? true : false ); 
+  }
+
   async activateLocal(userId){
     const query=
       `update local_users set is_Active=true, updated=Now() where user_id=${userId}`
     let results = await db.query(query).catch(console.log);
+    console.log(results);
     return results.rowCount==1;
   }
 

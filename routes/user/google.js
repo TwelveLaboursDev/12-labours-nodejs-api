@@ -1,6 +1,6 @@
 
-const {getGoogleToken} = require('../../middleware/auth');
-
+const {getGoogleToken,signUserToken} = require('../../middleware/auth');
+const addNewUser=require('./user').addNewUser;
 const User = require('../../controllers/User');
 
 const express=require('express');
@@ -8,26 +8,18 @@ const router=express.Router();
 
 
 router.post('/user/google/login', getGoogleToken, async (req,res)=>{ 
-  try{
-    //console.log(req.access_token)
-    //const{email,googleId}=req.body;
-    const email='zarar123@hotmail.com';
-    const googleId='123-google-id'
-
-    if (!(email && googleId)) {
-      return res.status(400).send("Incomplete request.");
-    }
+  try{     
+    const{email,googleId}=req.googleProfile;
 
     const userObj=new User();
-    const usersFound=await userObj.authenticateGoogle(email,googleId);
-    if(usersFound.length<=0){
-      res.status(404).send("Unexpected error. Specified user does not exist.");
+    const userFound=await userObj.authenticateGoogle(email,googleId);
+    if(userFound){
+      const user=await userObj.getProfileById(userFound.user_id);
+      const token=signUserToken(user.user_id,user.email); 
+      res.status(200).send({user:user,access_token:token});  
     }
     else{
-      const {user_id}=usersFound[0];
-      //const token='dummy token for '+ user_id;
-      const token=userObj.signUserToken(user_id,email);  //signUserToken???
-      res.status(200).send({access_token:token});
+      res.status(200).send({createAccount:true,googleProfile:req.googleProfile});
     }
   }
   catch (err) {
@@ -35,11 +27,23 @@ router.post('/user/google/login', getGoogleToken, async (req,res)=>{
   }
 });
 
+router.post('/user/google/register', addNewUser, async(req,res)=>{
+  try{
+    const userId=req.newUserId;
+    const user=await new User().getProfileById(userId);
+    const token=signUserToken(user.user_id,user.email); 
+    res.status(200).send({user:user,access_token:token});    
+  }
+  catch (err) {
+    console.log(err)
+    return res.status(404).json({message:'An error occured while creating user. Try again.'});
+  }
+});
 
-/*
-router.delete('/api/delete/:id',(req,res)=>{
- 
-});*/
+
+router.delete('/user/google/delete',(req,res)=>{
+  //revokeGoogleAccount();
+});
 
 
 module.exports=router;

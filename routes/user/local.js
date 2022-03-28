@@ -17,14 +17,13 @@ router.post('/user/local/login', async (req,res)=>{
       return res.status(400).json({message:'Provide email and password'}); 
 
     const userObj=new User();
-    const usersFound=await userObj.authenticateLocal(email,password);
-    if(usersFound.length<=0)
+
+    const userFound=await userObj.authenticateLocal(email,password);
+    if(!userFound)
       return res.status(403).json({message:'User with specified email/password was not found'});
-    
-    const {user_id}=usersFound[0];
-    const user=(await userObj.getProfileById(user_id))[0];
+
+    const user=await userObj.getProfileById(userFound.user_id);
     const token=signUserToken(user.user_id,user.email);
-    //console.log(token);
     res.status(200).send({user:user,access_token:token});  
   }
   catch (err) {
@@ -36,8 +35,8 @@ router.post('/user/local/login', async (req,res)=>{
 router.post('/user/local/register', async(req,res)=>{
   try{
     const {userInfo,strategy}=req.body 
-
-    if(!userInfo)
+    
+    if(!userInfo || !userInfo.email ||!userInfo.password || !userInfo.firstName || !userInfo.lastName || !userInfo.title)
       return res.status(400).json({message:'User Information is missing'});
     
     const userObj=new User();
@@ -47,7 +46,7 @@ router.post('/user/local/register', async(req,res)=>{
     const newUserId=await userObj.createUser(userInfo,strategy)
     if(!newUserId)
       return res.status(404).json({message:'An error occured while creating user. Try again.'});
-
+    
     const sendStatus=await askToConfirm(newUserId,userInfo.email)
     res.status(200).send({email:userInfo.email,emailSent:sendStatus})
   }
@@ -60,15 +59,16 @@ router.post('/user/local/register', async(req,res)=>{
 router.post('/user/local/confirm' , verifyToken,async(req,res)=>{
   
   const {emailFromToken,idFromToken,tokenStatus}=req;
-
+  console.log(emailFromToken)
   const userObj=await new User();
   const user=await userObj.localUserExists(emailFromToken);
-
+  
   if(!user || user.user_id!=idFromToken)
     return res.status(400).json({message:'Invalid user, please register a new account.'});
 
+  console.log(user);
   if(user.is_active){
-    return res.status(200).send('OK')
+    return res.status(200).send({alreadyActive:true});
   }
   else{   
     if(tokenStatus==='expired'){
@@ -100,7 +100,7 @@ router.post('/user/local/email' ,async(req,res)=>{
       return res.status(400).json({message:'Invalid user, please register a new account.'});
  
     if(user.is_active){
-      res.status(200).send({alreadyActive:true})
+      res.status(200).send('OK')
     }
     else{  
       const sendStatus=await askToConfirm(user.user_id,email);
@@ -134,7 +134,7 @@ router.post('/user/local/password', verifyToken, async(req,res)=>{
 
 async function askToConfirm(userId,userEmail){
   try{
-    const tokenExpiry='2 days';  
+    const tokenExpiry='2 days';  //2 days
     const token=signUserToken(userId,userEmail,tokenExpiry); 
     const verifyURL=`${process.env.USER_VERIFY_URL}/${token}`;
     htmlTemplate=htmlTemplate.replace('[confirmLink]', verifyURL).replace('[tokenExpiry]',tokenExpiry);
@@ -146,5 +146,6 @@ async function askToConfirm(userId,userEmail){
     console.log(err)
   }
 }
+
 
 module.exports=router;

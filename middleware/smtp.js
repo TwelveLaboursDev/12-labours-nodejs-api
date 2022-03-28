@@ -27,7 +27,7 @@ class SmtpSender {
     await sgMail.send(msg)
     .then((response) => {
       sendResult=response[0].statusCode===202 ? true : false;
-      console.log('SendGrid response: ' + response[0].statusCode);
+      //console.log('SendGrid response: ' + response[0].statusCode);
     })
     .catch((error) => {
       console.error('SendGrid error: ' + error);
