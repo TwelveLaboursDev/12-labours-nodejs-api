@@ -59,14 +59,12 @@ router.post('/user/local/register', async(req,res)=>{
 router.post('/user/local/confirm' , verifyToken,async(req,res)=>{
   
   const {emailFromToken,idFromToken,tokenStatus}=req;
-  console.log(emailFromToken)
   const userObj=await new User();
   const user=await userObj.localUserExists(emailFromToken);
   
   if(!user || user.user_id!=idFromToken)
     return res.status(400).json({message:'Invalid user, please register a new account.'});
 
-  console.log(user);
   if(user.is_active){
     return res.status(200).send({alreadyActive:true});
   }
@@ -100,7 +98,7 @@ router.post('/user/local/email' ,async(req,res)=>{
       return res.status(400).json({message:'Invalid user, please register a new account.'});
  
     if(user.is_active){
-      res.status(200).send('OK')
+      res.status(200).send({alreadyActive:true})
     }
     else{  
       const sendStatus=await askToConfirm(user.user_id,email);
@@ -135,11 +133,12 @@ router.post('/user/local/password', verifyToken, async(req,res)=>{
 async function askToConfirm(userId,userEmail){
   try{
     const tokenExpiry='2 days';  //2 days
-    const token=signUserToken(userId,userEmail,tokenExpiry); 
+    const token=signUserToken(userId,userEmail,tokenExpiry);
+
     const verifyURL=`${process.env.USER_VERIFY_URL}/${token}`;
-    htmlTemplate=htmlTemplate.replace('[confirmLink]', verifyURL).replace('[tokenExpiry]',tokenExpiry);
-    textTemplate=textTemplate.replace('[confirmLink]', verifyURL).replace('[tokenExpiry]',tokenExpiry);
-    const smtpObj=new SmtpSender(userEmail,subjectTemplate,textTemplate,htmlTemplate);
+    const htmlBody=htmlTemplate.replace('[confirmLink]', verifyURL).replace('[tokenExpiry]',tokenExpiry);
+    const textBody=textTemplate.replace('[confirmLink]', verifyURL).replace('[tokenExpiry]',tokenExpiry);
+    const smtpObj=new SmtpSender(userEmail,subjectTemplate,textBody,htmlBody);
     return  await smtpObj.sendEmail();
   }
   catch(err){

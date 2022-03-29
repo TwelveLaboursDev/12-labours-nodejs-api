@@ -65,6 +65,7 @@ class User {
     from users u inner JOIN local_users lu on u.user_id=lu.user_id
     where LOWER(email)='${email.toLowerCase()}'`
     
+    //console.log(query)
     let results = await db.query(query).catch(console.log);
     return results.rowCount>0 ? results.rows[0] : null;  
   }
@@ -79,7 +80,7 @@ class User {
     const query=
       `update local_users set is_Active=true, updated=Now() where user_id=${userId}`
     let results = await db.query(query).catch(console.log);
-    console.log(results);
+    //console.log(results);
     return results.rowCount==1;
   }
 
