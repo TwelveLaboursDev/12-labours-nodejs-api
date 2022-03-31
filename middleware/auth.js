@@ -1,6 +1,9 @@
 require('dotenv').config();
-const SECRET_KEY=process.env.SECRET_KEY
-const {clientId, clientSecret, redirectUri } = require('../config/google')
+const SECRET_KEY=process.env.SECRET_KEY;
+const API_KEY=process.env.API_KEY;
+//const API_KEY='1233';
+
+const {clientId, clientSecret, redirectUri } = require('../config/google');
 
 const {OAuth2Client} = require('google-auth-library');
 const googleClient = new OAuth2Client(clientId,clientSecret,redirectUri);
@@ -19,8 +22,7 @@ function signUserToken (id,email,expiry) {
 }
 
 function verifyToken(req, res, next) {
-  let rawToken = req.get('Authorization') || req.headers['Authorization'];
-
+  let rawToken = req.get('access_token') || req.headers['access_token'];
   if (!rawToken || !rawToken.split(' ')[1]) 
     return res.status(404).json({message:'A valid token is required for authentication'});
 
@@ -47,10 +49,12 @@ function verifyToken(req, res, next) {
 async function getGoogleToken(req, res, next) {
   try{
     const googleCode=req.body.code;
+
     if(!googleCode)
       return res.status(400).json({message:"Invalid request. Google code not provided"}); 
 
-    const {tokens}=await googleClient.getToken(googleCode);     
+    const {tokens}=await googleClient.getToken(googleCode);
+       
     const payload=await verifyGoogleIdToken(tokens.id_token);
     if(!payload)
       return res.status(403).json({message:"Authentication failed"});
@@ -84,4 +88,12 @@ async function verifyGoogleIdToken(token) {
   }
 }
 
-module.exports = {verifyToken,getGoogleToken,signUserToken};
+
+function verifyClient(req,res,next){
+  const keyFromClient = req.get('Authorization') || req.headers['Authorization'];
+  if (!keyFromClient || !(keyFromClient==API_KEY)) 
+    return res.status(404).json({message:'Authentication failed'});
+
+  next();
+}
+module.exports = {verifyToken,getGoogleToken,signUserToken,verifyClient};

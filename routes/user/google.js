@@ -1,5 +1,5 @@
 
-const {getGoogleToken,signUserToken} = require('../../middleware/auth');
+const {getGoogleToken,signUserToken,verifyClient} = require('../../middleware/auth');
 const addNewUser=require('./user').addNewUser;
 const User = require('../../controllers/User');
 
@@ -26,7 +26,7 @@ router.post('/user/google/login', getGoogleToken, async (req,res)=>{
   }
 });
 
-router.post('/user/google/register', addNewUser, async(req,res)=>{
+router.post('/user/google/register', verifyClient, addNewUser, async(req,res)=>{
   try{
     const userId=req.newUserId;
     const user=await new User().getProfileById(userId);

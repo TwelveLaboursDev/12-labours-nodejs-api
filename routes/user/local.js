@@ -1,6 +1,6 @@
 
 let {subjectTemplate,textTemplate,htmlTemplate} = require('../../middleware/message');
-const {verifyToken,signUserToken} = require("../../middleware/auth");
+const {verifyToken,signUserToken,verifyClient} = require("../../middleware/auth");
 
 const User = require('../../controllers/User');
 const SmtpSender = require('../../middleware/smtp');
@@ -9,7 +9,7 @@ const express=require('express');
 const router=express.Router();
 
 
-router.post('/user/local/login', async (req,res)=>{
+router.post('/user/local/login', verifyClient, async (req,res)=>{
   try{
     const{email,password}=req.body;
 
@@ -32,7 +32,7 @@ router.post('/user/local/login', async (req,res)=>{
 });
 
 
-router.post('/user/local/register', async(req,res)=>{
+router.post('/user/local/register', verifyClient, async(req,res)=>{
   try{
     const {userInfo,strategy}=req.body 
     
@@ -56,7 +56,7 @@ router.post('/user/local/register', async(req,res)=>{
 });
 
 
-router.post('/user/local/confirm' , verifyToken,async(req,res)=>{
+router.post('/user/local/confirm' , verifyClient, verifyToken,async(req,res)=>{
   
   const {emailFromToken,idFromToken,tokenStatus}=req;
   const userObj=await new User();
@@ -87,7 +87,7 @@ router.post('/user/local/confirm' , verifyToken,async(req,res)=>{
 });
 
 
-router.post('/user/local/email' ,async(req,res)=>{
+router.post('/user/local/email' ,verifyClient, async(req,res)=>{
   try{
     const{email}=req.body;
     if(!email)
