@@ -14,9 +14,8 @@ router.post('/user/google/login', getGoogleToken, async (req,res)=>{
     const userObj=new User();
     const userFound=await userObj.authenticateGoogle(email,googleId);
     if(userFound){
-      const user=await userObj.getProfileById(userFound.user_id);
-      const token=signUserToken(user.user_id,user.email); 
-      res.status(200).send({user:user,access_token:token});  
+      const token=signUserToken(userFound.user_id,email); 
+      res.status(200).send({access_token:token});  
     }
     else{
       res.status(200).send({createAccount:true,googleProfile:req.googleProfile});
