@@ -1,0 +1,17 @@
+Setup user with postgres su:
+
+createuser --interactive --pwprompt
+
+12-labours
+
+
+Create database with postgres account create.sql
+psql -U postgres postgres -f create.sql
+
+Create tables:
+psql -U 12-labours -d 12labours -W -f createTable.sql
+
+
+Setup initial data:
+psql -U 12-labours -d 12labours -W -f dataSetup.sql
+
