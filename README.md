@@ -33,34 +33,34 @@ GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET
 ```bash
 
 #The following indicates which portal the api services should be deployed on
-export API_PORT= '8085'
+API_PORT= '8085'
 #The following should point to the verify page on the portal
-export USER_VERIFY_URL='{PORTAL URL}'/verify
+USER_VERIFY_URL='{PORTAL URL}'/verify
 #Google authentication will redirect the user to the following page.
 #This need to be setup on google for it to work
-export GOOGLE_REDIRECT_URI='{PORTAL URL}'/login/callback
+GOOGLE_REDIRECT_URI='{PORTAL URL}'/login/callback
 #A secret phase of your own choosing
-export SECRET_KEY='SomeSecretKey'
+SECRET_KEY='SomeSecretKey'
 #Database server host
-export DB_HOST="localhost"
+DB_HOST="localhost"
 #Database server port
-export DB_PORT=5432
+DB_PORT=5432
 #Database user name
-export DB_USER="12-labours"
+DB_USER="12-labours"
 #Password of the DB_USER
-export DB_PASSWORD="some password"
+DB_PASSWORD="some password"
 #Name for the database
-export DB_NAME="12labours"
+DB_NAME="12labours"
 #The following is the client id and secret from google.They are provided from 
 #the Credentials setup on Google Cloud. They are used for google login
-export GOOGLE_CLIENT_ID=
-export GOOGLE_CLIENT_SECRET=
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
 #Sendgrid email notification keys and sender email address
-export SENDGRID_API_KEY='Sendgrid keys'
-export SENDGRID_VERIFIED_SENDER=""
+SENDGRID_API_KEY='Sendgrid keys'
+SENDGRID_VERIFIED_SENDER=""
 #An API Key to protect the server, this variable is required and 
 #should be the same when starting the api and app server
-export API_KEY=Anything
+API_KEY=Anything
 
 ```
 
