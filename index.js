@@ -1,24 +1,20 @@
+const express = require("express");
+require("dotenv").config();
 
+// Setup Express
+const app = express();
+const port = process.env.API_PORT || 8080;
 
-const express=require('express');
-var cors = require('cors');
-require('dotenv').config();
-
-const app=express();
-
+// Enable CORS
+var cors = require("cors");
 app.use(cors());
+
+// Setup body-parser
 app.use(express.json());
-app.use(express.urlencoded({ extended: true} ));
 
-const allUserRoutes = require('./routes/user');
-const dhbRoutes = require('./routes/dhb');
-const hospitalRoutes = require('./routes/hospital');
-const institutionRoutes = require('./routes/institution');
+app.use(express.urlencoded({ extended: true }));
 
-app.use(allUserRoutes);
-app.use(dhbRoutes);
-app.use(hospitalRoutes);
-app.use(institutionRoutes);
+const routes = require("./routes");
+app.use(routes);
 
-const port=process.env.API_PORT || 8080
-app.listen(port, ()=>console.log(`listening on port ${port}...at ${Date()}`));
+app.listen(port, () => console.log(`listening on port ${port}...at ${Date()}`));
