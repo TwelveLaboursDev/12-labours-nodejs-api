@@ -1,26 +1,25 @@
-require('dotenv').config();
-
 const db = require("../config/db");
-db.connect();
 
-class Dhb {
-  
-  async getNorth(){
-    const query=
-      `select dhb_id as value, dhb_name as display from dhbs where island='North'`;
-    let results = await db.query(query).catch(console.log);
-    return results.rows;
-  }
-
-  async getSouth(){
-    const query=
-      `select dhb_id as value, dhb_name as display from dhbs where island='South'`;
-    let results = await db.query(query).catch(console.log);
-    return results.rows;
-  }
-
+async function getNorthDhbs() {
+  let { rows } = await db
+    .query(
+      `SELECT dhb_id AS value, dhb_name AS display 
+      FROM dhbs 
+      WHERE island='North'`
+    )
+    .catch((err) => console.log(err.stack));
+  return rows;
 }
 
-db.end;
+async function getSouthDhbs() {
+  let { rows } = await db
+    .query(
+      `SELECT dhb_id AS value, dhb_name AS display 
+      FROM dhbs 
+      WHERE island='South'`
+    )
+    .catch((err) => console.log(err.stack));
+  return rows;
+}
 
-module.exports=Dhb;
+module.exports = { getNorthDhbs, getSouthDhbs };
