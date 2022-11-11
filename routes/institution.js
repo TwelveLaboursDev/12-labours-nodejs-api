@@ -8,7 +8,7 @@ function institutionRouter(institutionObject) {
       const institutions = await institutionObject.getInstitutions();
 
       if (institutions.length == 0) {
-        res.status(404).send({ error: "Institutions data not found" });
+        res.status(404).json({ message: "Institutions data not found" });
       } else {
         res.status(200).send(institutions);
       }

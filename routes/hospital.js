@@ -8,7 +8,7 @@ function hospitalRouter(hospitalObject) {
       const hospitals = await hospitalObject.getHospitals();
 
       if (hospitals.length == 0) {
-        res.status(404).send({ error: "Hospitals data not found" });
+        res.status(404).json({ message: "Hospitals data not found" });
       } else {
         res.status(200).send(hospitals);
       }
