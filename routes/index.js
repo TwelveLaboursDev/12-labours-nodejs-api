@@ -3,12 +3,14 @@ var router = require("express").Router();
 const allUserRoutes = require("./user");
 router.use(allUserRoutes);
 
-const dhbsRouter = require("./dhb");
+const dhbRouter = require("./dhb");
 const Dhb = require("../controllers/Dhb");
-const dhbRoutes = dhbsRouter(new Dhb());
+const dhbRoutes = dhbRouter(new Dhb());
 router.use(dhbRoutes);
 
-const hospitalRoutes = require("./hospital");
+const hospitalRouter = require("./hospital");
+const Hospital = require("../controllers/Hospital");
+const hospitalRoutes = hospitalRouter(new Hospital());
 router.use(hospitalRoutes);
 
 const institutionRoutes = require("./institution");

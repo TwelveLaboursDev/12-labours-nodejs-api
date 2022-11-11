@@ -1,6 +1,6 @@
 const express = require("express");
 
-function dhbsRouter(dhbObject) {
+function dhbRouter(dhbObject) {
   const router = express.Router();
 
   router.get("/dhbs", async (req, res) => {
@@ -8,7 +8,7 @@ function dhbsRouter(dhbObject) {
       const dhbsNorth = await dhbObject.getNorthDhbs();
       const dhbsSouth = await dhbObject.getSouthDhbs();
 
-      if (dhbsNorth.length <= 0 || dhbsSouth.length <= 0) {
+      if (dhbsNorth.length == 0 || dhbsSouth.length == 0) {
         res.status(404).send({ error: "Dhbs data not found" });
         return;
       } else {
@@ -27,4 +27,4 @@ function dhbsRouter(dhbObject) {
   return router;
 }
 
-module.exports = dhbsRouter;
+module.exports = dhbRouter;

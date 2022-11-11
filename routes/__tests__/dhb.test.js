@@ -1,5 +1,5 @@
 const request = require("supertest");
-const dhbsRouter = require("../dhb");
+const dhbRouter = require("../dhb");
 const express = require("express");
 
 const generateMockData = (length) => {
@@ -16,7 +16,7 @@ const generateMockData = (length) => {
 const getNorthDhbs = jest.fn();
 const getSouthDhbs = jest.fn();
 
-const dhbRoutes = dhbsRouter({
+const dhbRoutes = dhbRouter({
   getNorthDhbs,
   getSouthDhbs,
 });

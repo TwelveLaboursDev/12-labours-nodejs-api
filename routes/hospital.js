@@ -1,19 +1,25 @@
-const Hospital = require('../controllers/Hospital');
+const express = require("express");
 
-const express=require('express');
-const router=express.Router();
+function hospitalRouter(hospitalObject) {
+  const router = express.Router();
 
-router.get('/hospitals',async (req,res)=>{
-  try{
-      const hospitals=await new Hospital().getAll();
-      if(hospitals.length<=0)
-        res.status(403).send("Hospitals data not found");
-      else  
+  router.get("/hospitals", async (req, res) => {
+    try {
+      const hospitals = await hospitalObject.getHospitals();
+
+      if (hospitals.length == 0) {
+        res.status(404).send({ error: "Hospitals data not found" });
+        return;
+      } else {
         res.status(200).send(hospitals);
-  }
-  catch (err) {
-    console.log(err);
-  }
-});
+      }
+    } catch (err) {
+      console.log(err);
+      res.status(500);
+      return;
+    }
+  });
+  return router;
+}
 
-module.exports=router;
+module.exports = hospitalRouter;
