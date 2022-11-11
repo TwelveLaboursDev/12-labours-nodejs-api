@@ -50,7 +50,7 @@ describe("GET /dhbs", () => {
 
       const response = await request(app).get("/dhbs");
       expect(response.statusCode).toBe(404);
-      expect(response.body.error).toBe("Dhbs data not found");
+      expect(response.body.message).toBe("Dhbs data not found");
     });
   });
 });

@@ -41,7 +41,7 @@ describe("GET /institutions", () => {
 
       const response = await request(app).get("/institutions");
       expect(response.statusCode).toBe(404);
-      expect(response.body.error).toBe("Institutions data not found");
+      expect(response.body.message).toBe("Institutions data not found");
     });
   });
 });

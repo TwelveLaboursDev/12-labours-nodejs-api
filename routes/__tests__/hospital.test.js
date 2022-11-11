@@ -41,7 +41,7 @@ describe("GET /hospitals", () => {
 
       const response = await request(app).get("/hospitals");
       expect(response.statusCode).toBe(404);
-      expect(response.body.error).toBe("Hospitals data not found");
+      expect(response.body.message).toBe("Hospitals data not found");
     });
   });
 });
