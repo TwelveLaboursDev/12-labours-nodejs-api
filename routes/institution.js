@@ -9,14 +9,11 @@ function institutionRouter(institutionObject) {
 
       if (institutions.length == 0) {
         res.status(404).send({ error: "Institutions data not found" });
-        return;
       } else {
         res.status(200).send(institutions);
       }
     } catch (err) {
       console.log(err);
-      res.status(500);
-      return;
     }
   });
   return router;

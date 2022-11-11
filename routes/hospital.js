@@ -9,14 +9,11 @@ function hospitalRouter(hospitalObject) {
 
       if (hospitals.length == 0) {
         res.status(404).send({ error: "Hospitals data not found" });
-        return;
       } else {
         res.status(200).send(hospitals);
       }
     } catch (err) {
       console.log(err);
-      res.status(500);
-      return;
     }
   });
   return router;

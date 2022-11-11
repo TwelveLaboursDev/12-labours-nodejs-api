@@ -10,7 +10,6 @@ function dhbRouter(dhbObject) {
 
       if (dhbsNorth.length == 0 || dhbsSouth.length == 0) {
         res.status(404).send({ error: "Dhbs data not found" });
-        return;
       } else {
         const dhbs = [
           { label: "North Island", options: dhbsNorth },
@@ -20,8 +19,6 @@ function dhbRouter(dhbObject) {
       }
     } catch (err) {
       console.log(err);
-      res.status(500);
-      return;
     }
   });
   return router;
