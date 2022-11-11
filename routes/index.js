@@ -1,4 +1,4 @@
-var router = require("express").Router();
+const router = require("express").Router();
 
 const allUserRoutes = require("./user");
 router.use(allUserRoutes);
