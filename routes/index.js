@@ -13,7 +13,9 @@ const Hospital = require("../controllers/Hospital");
 const hospitalRoutes = hospitalRouter(new Hospital());
 router.use(hospitalRoutes);
 
-const institutionRoutes = require("./institution");
+const institutionRouter = require("./institution");
+const Institution = require("../controllers/Institution");
+const institutionRoutes = institutionRouter(new Institution());
 router.use(institutionRoutes);
 
 module.exports = router;
