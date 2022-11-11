@@ -3,7 +3,7 @@ const {
   signUserToken,
   verifyClient,
 } = require("../../middleware/auth");
-const { addNewUser } = require("./user");
+const { addNewUser } = require("./supportFunction");
 const User = require("../../controllers/User");
 
 const express = require("express");
