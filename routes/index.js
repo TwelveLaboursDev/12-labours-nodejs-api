@@ -4,8 +4,8 @@ const allUserRoutes = require("./user");
 router.use(allUserRoutes);
 
 const dhbsRouter = require("./dhb");
-const dhbDatabase = require("../controllers/Dhb");
-const dhbRoutes = dhbsRouter(dhbDatabase);
+const Dhb = require("../controllers/Dhb");
+const dhbRoutes = dhbsRouter(new Dhb());
 router.use(dhbRoutes);
 
 const hospitalRoutes = require("./hospital");
