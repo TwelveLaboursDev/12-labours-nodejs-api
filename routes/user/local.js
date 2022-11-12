@@ -4,7 +4,7 @@ const {
   signUserToken,
   verifyClient,
 } = require("../../middleware/auth");
-const { askToConfirm } = require("./supportFunction");
+const { askToConfirm, validateInput } = require("./supportFunction");
 
 function localUserRouter(localUserObject) {
   const router = express.Router();
@@ -13,38 +13,31 @@ function localUserRouter(localUserObject) {
     try {
       const { email, password } = req.body;
 
-      if (!(email && password))
+      if (!(email && password)) {
         return res.status(400).json({ message: "Provide email and password" });
+      }
+
+      if (!(validateInput(email) && validateInput(password))) {
+        return res
+          .status(400)
+          .json({ message: "Invalid symbols are included" });
+      }
 
       const userFound = await localUserObject.authenticateLocal(
         email,
         password
       );
-      if (!userFound)
+
+      if (!userFound) {
         return res.status(403).json({
           message: "User with specified email/password was not found",
         });
+      }
 
       const user = await localUserObject.getProfileById(userFound.user_id);
       const token = signUserToken(user.user_id, user.email);
+
       res.status(200).send({ user: user, access_token: token });
-    } catch (err) {
-      console.log(err);
-    }
-  });
-
-  router.get("/user/local/profile", verifyToken, async (req, res) => {
-    try {
-      if (req.tokenStatus == "expired")
-        return res.status(401).json({ message: "Token expired" });
-
-      const user = await localUserObject.getProfileById(req.idFromToken);
-
-      if (user) {
-        return res.status(200).send({ user: user });
-      } else {
-        return res.status(404).json({ message: "User not found" });
-      }
     } catch (err) {
       console.log(err);
     }
@@ -143,24 +136,52 @@ function localUserRouter(localUserObject) {
     }
   });
 
+  router.get("/user/local/profile", verifyToken, async (req, res) => {
+    try {
+      if (req.tokenStatus == "expired")
+        return res.status(401).json({ message: "Token expired" });
+
+      const user = await localUserObject.getProfileById(req.idFromToken);
+
+      if (user) {
+        return res.status(200).send({ user: user });
+      } else {
+        return res.status(404).json({ message: "User not found" });
+      }
+    } catch (err) {
+      console.log(err);
+    }
+  });
+
   router.post("/user/local/password", verifyToken, async (req, res) => {
     try {
       const { userId, newPassword, oldPassword } = req.body;
 
-      if (!userId || !newPassword || !oldPassword)
+      if (!userId || !newPassword || !oldPassword) {
         return res
           .status(404)
           .json({ message: "Incomplete data was provided." });
+      }
 
-      if (req.tokenStatus != "valid" || userId != req.idFromToken)
+      if (req.tokenStatus != "valid" || userId != req.idFromToken) {
         return res.status(401).json({ message: "Authentication failed" });
+      }
 
-      if (await localUserObject.changePassword(userId, oldPassword, newPassword))
+      if (!(validateInput(oldPassword) && validateInput(newPassword))) {
+        return res
+          .status(400)
+          .json({ message: "Invalid symbols are included" });
+      }
+
+      if (
+        await localUserObject.changePassword(userId, oldPassword, newPassword)
+      ) {
         res.status(200).send("OK");
-      else
-        return res.status(400).json({
+      } else {
+        res.status(400).json({
           message: "Your request can not be authenticated. Try again.",
         });
+      }
     } catch (err) {
       console.log(err);
     }
@@ -169,6 +190,7 @@ function localUserRouter(localUserObject) {
   router.post("/user/local/delete", verifyToken, async (req, res) => {
     try {
       const { userId } = req.body;
+
       if (!userId) {
         return res
           .status(404)
@@ -182,7 +204,7 @@ function localUserRouter(localUserObject) {
       if (await localUserObject.deleteUser(userId)) {
         res.status(200).send("OK");
       } else {
-        return res
+        res
           .status(400)
           .json({ message: "Your request can not be completed. Try again." });
       }

@@ -1,29 +1,16 @@
 const db = require("../config/db");
 
 class User {
-  async getProfileById(userId) {
-    // "rowCount"
-    // The number of rows processed by the last command
-    // Use to determine if the query is valid
+  async authenticateLocal(email, password) {
     let { rowCount, rows } = await db
       .query(
-        `SELECT user_id, type_name, email, title, first_name, last_name, profession, u.institution_id AS institution_id, institution_name, nhi, hpi, u.dhb_id AS dhb_id, dhb_name, u.hospital_id AS hospital_id, hospital_name
+        `SELECT u.user_id 
         FROM users u 
-        INNER JOIN user_types ut ON u.type_id=ut.type_id
-        LEFT JOIN institutions i ON u.institution_id=i.institution_id
-        LEFT JOIN dhbs d ON u.dhb_id=d.dhb_id
-        LEFT JOIN hospitals h ON u.hospital_id=h.hospital_id
-        WHERE user_id=${userId}`
+        INNER JOIN local_users lu ON u.user_id=lu.user_id
+        WHERE lower(u.email)=lower('${email}') AND lu.password='${password}' AND lu.is_active=true`
       )
       .catch((err) => console.log(err.stack));
     return rowCount == 1 ? rows[0] : null;
-  }
-
-  async authenticateLocal(email, pass) {
-    const query = `select u.user_id from users u inner join local_users lu ON u.user_id=lu.user_id
-      where lower(u.email)=lower('${email}') and lu.password='${pass}' and lu.is_Active=true`;
-    let results = await db.query(query).catch(console.log);
-    return results.rowCount == 1 ? results.rows[0] : null;
   }
 
   async authenticateGoogle(email, googleId) {
@@ -85,10 +72,33 @@ class User {
     return results.rowCount == 1;
   }
 
+  async getProfileById(userId) {
+    // "rowCount"
+    // The number of rows processed by the last command
+    // Use to determine if the query is valid
+    let { rowCount, rows } = await db
+      .query(
+        `SELECT user_id, type_name, email, title, first_name, last_name, profession, u.institution_id AS institution_id, institution_name, nhi, hpi, u.dhb_id AS dhb_id, dhb_name, u.hospital_id AS hospital_id, hospital_name
+        FROM users u 
+        INNER JOIN user_types ut ON u.type_id=ut.type_id
+        LEFT JOIN institutions i ON u.institution_id=i.institution_id
+        LEFT JOIN dhbs d ON u.dhb_id=d.dhb_id
+        LEFT JOIN hospitals h ON u.hospital_id=h.hospital_id
+        WHERE user_id=${userId}`
+      )
+      .catch((err) => console.log(err.stack));
+    return rowCount == 1 ? rows[0] : null;
+  }
+
   async changePassword(userId, oldPassword, newPassword) {
-    const query = `update local_users set password='${newPassword}', updated=Now() where user_id=${userId} and password='${oldPassword}'`;
-    let results = await db.query(query).catch(console.log);
-    return results.rowCount == 1;
+    let { rowCount } = await db
+      .query(
+        `UPDATE local_users 
+        SET password='${newPassword}', updated=Now() 
+        WHERE user_id=${userId} and password='${oldPassword}'`
+      )
+      .catch((err) => console.log(err.stack));
+    return rowCount == 1;
   }
 
   async deleteUser(userId) {

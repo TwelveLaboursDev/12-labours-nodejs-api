@@ -62,7 +62,15 @@ async function askToConfirm(userId, userEmail) {
   }
 }
 
+function validateInput(input) {
+  if (input.includes("'") || input.includes('"') || input.includes("`")) {
+    return false;
+  }
+  return true;
+}
+
 module.exports = {
   addNewUser,
   askToConfirm,
+  validateInput,
 };
