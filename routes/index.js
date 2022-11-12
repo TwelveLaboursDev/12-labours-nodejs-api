@@ -3,10 +3,10 @@ const router = require("express").Router();
 const allUserRoutes = require("./user");
 router.use(allUserRoutes);
 
-const identityRouter = require("./identity");
-const Identity = require("../controllers/Identity");
-const identityRoutes = identityRouter(new Identity());
-router.use(identityRoutes);
+const typeRouter = require("./type");
+const Type = require("../controllers/Type");
+const typeRoutes = typeRouter(new Type());
+router.use(typeRoutes);
 
 const institutionRouter = require("./institution");
 const Institution = require("../controllers/Institution");

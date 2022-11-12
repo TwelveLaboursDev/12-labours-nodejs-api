@@ -7,7 +7,7 @@ class User {
         `SELECT u.user_id 
         FROM users u 
         INNER JOIN local_users lu ON u.user_id=lu.user_id
-        WHERE lower(u.email)=lower('${email}') AND lu.password='${password}' AND lu.is_active=true`
+        WHERE LOWER(u.email)='${email.toLowerCase()}' AND lu.password='${password}' AND lu.is_active=true`
       )
       .catch((err) => console.log(err.stack));
     return rowCount == 1 ? rows[0] : null;
@@ -21,42 +21,60 @@ class User {
   }
 
   async createUser(userInfo, strategy) {
-    const query = `insert into users (type_id, email, title, first_name, last_name,profession,institution_id,hpi,hospital_id,nhi,dhb_id,created)
-      select ut.type_id,'${userInfo.email}','${userInfo.title}','${
-      userInfo.firstName
-    }','${userInfo.lastName}','${userInfo.profession}',${
-      userInfo.institutionId
-    },'${userInfo.hpi}',${userInfo.hospitalId},'${userInfo.nhi}',${
-      userInfo.dhbId
-    },Now()
-      from user_types ut where LOWER(ut.type_name)='${userInfo.userTypeName.toLowerCase()}'`;
-    let results = await db.query(query).catch(console.log);
-    if (results.rowCount != 1) return null;
-
-    let newUser = await db
+    // "INSERT INTO SELECT"
+    // Copy type_id from user_types table and insert it into users table
+    let userResult = await db
       .query(
-        `select user_id from users where lower(email)=lower('${userInfo.email}')`
+        `INSERT INTO users (type_id, email, title, first_name, last_name, profession, institution_id, hpi, hospital_id, nhi, dhb_id, created)
+        SELECT ut.type_id, '${userInfo.email}', '${userInfo.title}', '${
+          userInfo.firstName
+        }', '${userInfo.lastName}', '${userInfo.profession}', ${
+          userInfo.institutionId
+        }, '${userInfo.hpi}', ${userInfo.hospitalId}, '${userInfo.nhi}', ${
+          userInfo.dhbId
+        }, Now()
+        FROM user_types ut 
+        WHERE LOWER(ut.type_name)='${userInfo.userTypeName.toLowerCase()}'`
       )
-      .catch(console.log);
-    const newUserId = newUser.rows[0].user_id;
-    const query2 =
-      strategy === "local"
-        ? `insert into local_users (user_id, password, is_Active,created)
-        values (${newUserId},'${userInfo.password}',false,Now())`
-        : `insert into google_users (user_id, google_id,created)
-      values (${newUserId},'${userInfo.googleId}',Now())`;
-    let results2 = await db.query(query2).catch(console.log);
-    return results2.rowCount == 1 ? newUserId : null;
+      .catch((err) => console.log(err.stack));
+
+    // Return null if the data does not insert register into the table successfully
+    if (userResult.rowCount != 1) {
+      return null;
+    }
+
+    // Use to query the generated user id
+    let { rows } = await db
+      .query(
+        `SELECT user_id 
+        FROM users 
+        WHERE lower(email)='${userInfo.email.toLowerCase()}'`
+      )
+      .catch((err) => console.log(err.stack));
+    const newUserId = rows[0].user_id;
+
+    // Insert user data into the local/google user table
+    let platformResult = await db
+      .query(
+        strategy === "local"
+          ? `INSERT INTO local_users (user_id, password, is_active, created)
+            VALUES (${newUserId}, '${userInfo.password}', false, Now())`
+          : `INSERT INTO google_users (user_id, google_id, created)
+            VALUES (${newUserId}, '${userInfo.googleId}', Now())`
+      )
+      .catch((err) => console.log(err.stack));
+    return platformResult.rowCount == 1 ? newUserId : null;
   }
 
   async localUserExists(email) {
-    const query = `select lu.user_id as user_id,is_active
-    from users u inner JOIN local_users lu on u.user_id=lu.user_id
-    where LOWER(email)='${email.toLowerCase()}'`;
-
-    //console.log(query)
-    let results = await db.query(query).catch(console.log);
-    return results.rowCount > 0 ? results.rows[0] : null;
+    let { rowCount, rows } = await db
+      .query(
+        `SELECT lu.user_id AS user_id, is_active
+        FROM users u INNER JOIN local_users lu ON u.user_id=lu.user_id
+        WHERE LOWER(email)='${email.toLowerCase()}'`
+      )
+      .catch((err) => console.log(err.stack));
+    return rowCount > 0 ? rows[0] : null;
   }
 
   async emailExists(email) {

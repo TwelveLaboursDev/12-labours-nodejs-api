@@ -1,7 +1,7 @@
 const db = require("../config/db");
 
-class Identity {
-  async getIdentities() {
+class Type {
+  async getTypes() {
     let { rows } = await db
       .query(
         `SELECT type_id AS value, type_name AS display 
@@ -12,4 +12,4 @@ class Identity {
   }
 }
 
-module.exports = Identity;
+module.exports = Type;

@@ -2,6 +2,10 @@ const request = require("supertest");
 const express = require("express");
 const localUserRouter = require("../local");
 
+describe("POST /user/local/register", () => {
+  test("", () => {});
+});
+
 describe("POST /user/local/login", () => {
   test("", () => {});
 });

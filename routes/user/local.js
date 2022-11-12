@@ -9,40 +9,6 @@ const { askToConfirm, validateInput } = require("./supportFunction");
 function localUserRouter(localUserObject) {
   const router = express.Router();
 
-  router.post("/user/local/login", verifyClient, async (req, res) => {
-    try {
-      const { email, password } = req.body;
-
-      if (!(email && password)) {
-        return res.status(400).json({ message: "Provide email and password" });
-      }
-
-      if (!(validateInput(email) && validateInput(password))) {
-        return res
-          .status(400)
-          .json({ message: "Invalid symbols are included" });
-      }
-
-      const userFound = await localUserObject.authenticateLocal(
-        email,
-        password
-      );
-
-      if (!userFound) {
-        return res.status(403).json({
-          message: "User with specified email/password was not found",
-        });
-      }
-
-      const user = await localUserObject.getProfileById(userFound.user_id);
-      const token = signUserToken(user.user_id, user.email);
-
-      res.status(200).send({ user: user, access_token: token });
-    } catch (err) {
-      console.log(err);
-    }
-  });
-
   router.post("/user/local/register", verifyClient, async (req, res) => {
     try {
       const { userInfo, strategy } = req.body;
@@ -54,17 +20,31 @@ function localUserRouter(localUserObject) {
         !userInfo.firstName ||
         !userInfo.lastName ||
         !userInfo.title
-      )
+      ) {
         return res.status(400).json({ message: "User Information is missing" });
+      }
 
-      if (await localUserObject.localUserExists(userInfo.email))
-        return res.status(409).json({ message: "Email already exists" });
+      if (
+        !validateInput(userInfo.firstName) ||
+        !validateInput(userInfo.lastName) ||
+        !validateInput(userInfo.password)
+      ) {
+        return res
+          .status(400)
+          .json({ message: "Invalid symbols are included" });
+      }
+
+      if (await localUserObject.localUserExists(userInfo.email)) {
+        return res.status(400).json({ message: "Email already exists" });
+      }
 
       const newUserId = await localUserObject.createUser(userInfo, strategy);
-      if (!newUserId)
+
+      if (!newUserId) {
         return res.status(404).json({
-          message: "An error occured while creating user. Try again.",
+          message: "An error occurred while creating user. Try again.",
         });
+      }
 
       const sendStatus = await askToConfirm(newUserId, userInfo.email);
       res.status(200).send({ email: userInfo.email, emailSent: sendStatus });
@@ -136,6 +116,40 @@ function localUserRouter(localUserObject) {
     }
   });
 
+  router.post("/user/local/login", verifyClient, async (req, res) => {
+    try {
+      const { email, password } = req.body;
+
+      if (!email || !password) {
+        return res.status(400).json({ message: "Provide email and password" });
+      }
+
+      if (!validateInput(email) || !validateInput(password)) {
+        return res
+          .status(400)
+          .json({ message: "Invalid symbols are included" });
+      }
+
+      const userFound = await localUserObject.authenticateLocal(
+        email,
+        password
+      );
+
+      if (!userFound) {
+        return res.status(403).json({
+          message: "User with specified email/password was not found",
+        });
+      }
+
+      const user = await localUserObject.getProfileById(userFound.user_id);
+      const token = signUserToken(user.user_id, user.email);
+
+      res.status(200).send({ user: user, access_token: token });
+    } catch (err) {
+      console.log(err);
+    }
+  });
+
   router.get("/user/local/profile", verifyToken, async (req, res) => {
     try {
       if (req.tokenStatus == "expired")
@@ -167,7 +181,7 @@ function localUserRouter(localUserObject) {
         return res.status(401).json({ message: "Authentication failed" });
       }
 
-      if (!(validateInput(oldPassword) && validateInput(newPassword))) {
+      if (!validateInput(oldPassword) || !validateInput(newPassword)) {
         return res
           .status(400)
           .json({ message: "Invalid symbols are included" });
