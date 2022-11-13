@@ -14,10 +14,14 @@ class User {
   }
 
   async authenticateGoogle(email, googleId) {
-    const query = `select u.user_id as user_id from users u inner join google_users gu ON u.user_id=gu.user_id
-      where lower(u.email)=lower('${email}') and gu.google_id='${googleId}'`;
-    let results = await db.query(query).catch(console.log);
-    return results.rowCount == 1 ? results.rows[0] : null;
+    let { rowCount, rows } = await db
+      .query(
+        `SELECT u.user_id AS user_id 
+        FROM users u INNER JOIN google_users gu ON u.user_id=gu.user_id
+        WHERE LOWER(u.email)='${email.toLowerCase()}' AND gu.google_id='${googleId}'`
+      )
+      .catch((err) => console.log(err.stack));
+    return rowCount == 1 ? rows[0] : null;
   }
 
   async createUser(userInfo, strategy) {
@@ -78,16 +82,25 @@ class User {
   }
 
   async emailExists(email) {
-    const query = `select user_id from users where LOWER(email)='${email.toLowerCase()}'`;
-    let results = await db.query(query).catch(console.log);
-    return results.rowCount == 1 ? true : false;
+    let { rowCount } = await db
+      .query(
+        `SELECT user_id 
+        FROM users 
+        WHERE LOWER(email)='${email.toLowerCase()}'`
+      )
+      .catch((err) => console.log(err.stack));
+    return rowCount == 1 ? true : false;
   }
 
   async activateLocal(userId) {
-    const query = `update local_users set is_Active=true, updated=Now() where user_id=${userId}`;
-    let results = await db.query(query).catch(console.log);
-    //console.log(results);
-    return results.rowCount == 1;
+    let { rowCount } = await db
+      .query(
+        `UPDATE local_users 
+        SET is_active=true, updated=Now() 
+        WHERE user_id=${userId}`
+      )
+      .catch((err) => console.log(err.stack));
+    return rowCount == 1;
   }
 
   async getProfileById(userId) {

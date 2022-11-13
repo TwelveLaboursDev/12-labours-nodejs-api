@@ -39,7 +39,6 @@ function localUserRouter(localUserObject) {
       }
 
       const newUserId = await localUserObject.createUser(userInfo, strategy);
-
       if (!newUserId) {
         return res.status(404).json({
           message: "An error occurred while creating user. Try again.",
@@ -53,57 +52,20 @@ function localUserRouter(localUserObject) {
     }
   });
 
-  router.post(
-    "/user/local/confirm",
-    verifyClient,
-    verifyToken,
-    async (req, res) => {
-      const { emailFromToken, idFromToken, tokenStatus } = req;
-
-      const user = await localUserObject.localUserExists(emailFromToken);
-
-      if (!user || user.user_id != idFromToken)
-        return res
-          .status(400)
-          .json({ message: "Invalid user, please register a new account." });
-
-      if (user.is_active) {
-        return res.status(200).send({ alreadyActive: true });
-      } else {
-        if (tokenStatus === "expired") {
-          const sendStatus = await askToConfirm(user.user_id, emailFromToken);
-          sendStatus
-            ? res.status(400).json({
-                message:
-                  "Your verification has expired. A new email with confirmation link has been sent to your inbox.",
-              })
-            : res.status(400).json({
-                message: "Unexpected error occured. Try again later.",
-              });
-          return;
-        } else {
-          if (await localUserObject.activateLocal(user.user_id))
-            res.status(200).send("OK");
-          else
-            return res
-              .status(400)
-              .json({ message: "Unexpected error occured. Try again later." });
-        }
-      }
-    }
-  );
-
   router.post("/user/local/email", verifyClient, async (req, res) => {
     try {
       const { email } = req.body;
-      if (!email)
+
+      if (!email) {
         return res.status(404).json({ message: "Email not provided" });
+      }
 
       const user = await localUserObject.localUserExists(email);
-      if (!user)
+      if (!user) {
         return res
           .status(400)
           .json({ message: "Invalid user, please register a new account." });
+      }
 
       if (user.is_active) {
         res.status(200).send({ alreadyActive: true });
@@ -115,6 +77,49 @@ function localUserRouter(localUserObject) {
       console.log(err);
     }
   });
+
+  router.post(
+    "/user/local/confirm",
+    verifyClient,
+    verifyToken,
+    async (req, res) => {
+      const { emailFromToken, idFromToken, tokenStatus } = req;
+
+      const user = await localUserObject.localUserExists(emailFromToken);
+      if (!user || user.user_id != idFromToken) {
+        return res
+          .status(400)
+          .json({ message: "Invalid user, please register a new account." });
+      }
+
+      if (user.is_active) {
+        return res.status(200).send({ alreadyActive: true });
+      } else {
+        if (tokenStatus === "expired") {
+          const sendStatus = await askToConfirm(user.user_id, emailFromToken);
+
+          return res.status(400).json(
+            sendStatus
+              ? {
+                  message:
+                    "Your verification has expired. A new email with confirmation link has been sent to your inbox.",
+                }
+              : {
+                  message: "Unexpected error occurred. Try again later.",
+                }
+          );
+        } else {
+          if (await localUserObject.activateLocal(user.user_id))
+            res.status(200).send("OK");
+          else {
+            return res
+              .status(400)
+              .json({ message: "Unexpected error occurred. Try again later." });
+          }
+        }
+      }
+    }
+  );
 
   router.post("/user/local/login", verifyClient, async (req, res) => {
     try {
@@ -134,7 +139,6 @@ function localUserRouter(localUserObject) {
         email,
         password
       );
-
       if (!userFound) {
         return res.status(403).json({
           message: "User with specified email/password was not found",
@@ -143,7 +147,6 @@ function localUserRouter(localUserObject) {
 
       const user = await localUserObject.getProfileById(userFound.user_id);
       const token = signUserToken(user.user_id, user.email);
-
       res.status(200).send({ user: user, access_token: token });
     } catch (err) {
       console.log(err);
@@ -156,7 +159,6 @@ function localUserRouter(localUserObject) {
         return res.status(401).json({ message: "Token expired" });
 
       const user = await localUserObject.getProfileById(req.idFromToken);
-
       if (user) {
         return res.status(200).send({ user: user });
       } else {

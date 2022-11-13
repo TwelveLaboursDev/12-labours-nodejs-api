@@ -6,6 +6,14 @@ describe("POST /user/local/register", () => {
   test("", () => {});
 });
 
+describe("POST /user/local/email", () => {
+  test("", () => {});
+});
+
+describe("POST /user/local/confirm", () => {
+  test("", () => {});
+});
+
 describe("POST /user/local/login", () => {
   test("", () => {});
 });
