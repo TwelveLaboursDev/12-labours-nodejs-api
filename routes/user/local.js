@@ -35,7 +35,7 @@ function localUserRouter(localUserObject) {
       }
 
       if (await localUserObject.localUserExists(userInfo.email)) {
-        return res.status(400).json({ message: "Email already exists" });
+        return res.status(409).json({ message: "Email already exists" });
       }
 
       const newUserId = await localUserObject.createUser(userInfo, strategy);
@@ -109,9 +109,9 @@ function localUserRouter(localUserObject) {
                 }
           );
         } else {
-          if (await localUserObject.activateLocal(user.user_id))
+          if (await localUserObject.activateLocal(user.user_id)) {
             res.status(200).send("OK");
-          else {
+          } else {
             return res
               .status(400)
               .json({ message: "Unexpected error occurred. Try again later." });
@@ -155,14 +155,15 @@ function localUserRouter(localUserObject) {
 
   router.get("/user/local/profile", verifyToken, async (req, res) => {
     try {
-      if (req.tokenStatus == "expired")
+      if (req.tokenStatus == "expired") {
         return res.status(401).json({ message: "Token expired" });
+      }
 
       const user = await localUserObject.getProfileById(req.idFromToken);
       if (user) {
         return res.status(200).send({ user: user });
       } else {
-        return res.status(404).json({ message: "User not found" });
+        return res.status(403).json({ message: "User not found" });
       }
     } catch (err) {
       console.log(err);
@@ -176,7 +177,7 @@ function localUserRouter(localUserObject) {
       if (!userId || !newPassword || !oldPassword) {
         return res
           .status(404)
-          .json({ message: "Incomplete data was provided." });
+          .json({ message: "Incomplete data was provided" });
       }
 
       if (req.tokenStatus != "valid" || userId != req.idFromToken) {
@@ -194,7 +195,7 @@ function localUserRouter(localUserObject) {
       ) {
         res.status(200).send("OK");
       } else {
-        res.status(400).json({
+        res.status(403).json({
           message: "Your request can not be authenticated. Try again.",
         });
       }
@@ -221,7 +222,7 @@ function localUserRouter(localUserObject) {
         res.status(200).send("OK");
       } else {
         res
-          .status(400)
+          .status(403)
           .json({ message: "Your request can not be completed. Try again." });
       }
     } catch (err) {
