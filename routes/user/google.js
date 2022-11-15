@@ -43,7 +43,7 @@ function googleUserRouter(googleUserObject) {
       } catch (err) {
         console.log(err);
         return res.status(404).json({
-          message: "An error occured while creating user. Try again.",
+          message: "An error occurred while creating user. Try again.",
         });
       }
     }
