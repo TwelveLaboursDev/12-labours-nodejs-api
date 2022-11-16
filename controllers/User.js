@@ -122,11 +122,14 @@ class User {
   }
 
   async changePassword(userId, oldPassword, newPassword) {
+    let query = `UPDATE local_users 
+                SET password='${newPassword}', updated=Now() 
+                WHERE user_id=${userId}`;
     let { rowCount } = await db
       .query(
-        `UPDATE local_users 
-        SET password='${newPassword}', updated=Now() 
-        WHERE user_id=${userId} and password='${oldPassword}'`
+        oldPassword === null
+          ? query
+          : (query += ` and password='${oldPassword}'`)
       )
       .catch((err) => console.log(err.stack));
     return rowCount == 1;

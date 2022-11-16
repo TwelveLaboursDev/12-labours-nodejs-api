@@ -4,7 +4,12 @@ const {
   signUserToken,
   verifyClient,
 } = require("../../middleware/auth");
-const { askToConfirm, validateInput } = require("./supportFunction");
+const {
+  askToConfirm,
+  validateInput,
+  resetForgottenPassword,
+  temporaryPassword,
+} = require("./supportFunction");
 
 function localUserRouter(localUserObject) {
   const router = express.Router();
@@ -97,7 +102,6 @@ function localUserRouter(localUserObject) {
       } else {
         if (tokenStatus === "expired") {
           const sendStatus = await askToConfirm(user.user_id, emailFromToken);
-
           return res.status(400).json(
             sendStatus
               ? {
@@ -198,6 +202,54 @@ function localUserRouter(localUserObject) {
         res.status(403).json({
           message: "Your request can not be authenticated. Try again.",
         });
+      }
+    } catch (err) {
+      console.log(err);
+    }
+  });
+
+  // router.post("/user/local/password/reset", verifyClient, async (req, res) => {
+  router.post("/user/local/password/reset", async (req, res) => {
+    try {
+      const { email } = req.body;
+
+      if (!email) {
+        return res.status(400).json({ message: "Required email is missing" });
+      }
+
+      const user = await localUserObject.localUserExists(email);
+      if (!user) {
+        return res
+          .status(404)
+          .json({ message: "The email has not been registered" });
+      }
+
+      if (!user.is_active) {
+        // const sendStatus = await askToConfirm(user.user_id, email);
+        const sendStatus = true;
+        return res.status(403).json({
+          message: `The email has not been activated. ${
+            sendStatus
+              ? `Email has been sent to ${email}`
+              : "Unexpected error occurred. Try again later."
+          }`,
+        });
+      }
+
+      const tempPass = temporaryPassword(14); // length should between 8 to 20
+      if (await localUserObject.changePassword(user.user_id, null, tempPass)) {
+        if (await resetForgottenPassword(user.user_id, email, tempPass)) {
+          res.status(200).send({ message: `Email has been sent to ${email}` });
+        }
+        // else {
+        //   res
+        //     .status(403)
+        //     .send({ message: "Unexpected error occurred. Try again later." });
+        // }
+      } else {
+        res
+          .status(403)
+          .send({ message: "Unexpected error occurred. Try again later." });
       }
     } catch (err) {
       console.log(err);

@@ -1,7 +1,10 @@
 let {
-  subjectTemplate,
-  textTemplate,
-  htmlTemplate,
+  verifyHTMLTemplate,
+  verifyTextTemplate,
+  verifySubjectTemplate,
+  resetHTMLTemplate,
+  resetTextTemplate,
+  resetSubjectTemplate,
 } = require("../../middleware/message");
 const { signUserToken } = require("../../middleware/auth");
 const SmtpSender = require("../../middleware/smtp");
@@ -19,15 +22,6 @@ async function addNewUser(req, res, next) {
       !userInfo.title
     )
       return res.status(400).json({ message: "User Information is missing" });
-
-    // // Need to test out if really need this part
-    // if (
-    //   !validateInput(userInfo.firstName) ||
-    //   !validateInput(userInfo.lastName) ||
-    //   !validateInput(userInfo.password)
-    // ) {
-    //   return res.status(400).json({ message: "Invalid symbols are included" });
-    // }
 
     const userObj = new User();
     if (await userObj.emailExists(userInfo.email)) {
@@ -50,26 +44,65 @@ async function addNewUser(req, res, next) {
 
 async function askToConfirm(userId, userEmail) {
   try {
-    const tokenExpiry = "2 days"; //2 days
-    const token = signUserToken(userId, userEmail, tokenExpiry);
-
+    const tokenExpiry = "2 days";
+    const token = signUserToken(userId, userEmail, "2d");
     const verifyURL = `${process.env.USER_VERIFY_URL}/${token}`;
-    const htmlBody = htmlTemplate
+
+    const htmlBody = verifyHTMLTemplate
       .replace("[confirmLink]", verifyURL)
       .replace("[tokenExpiry]", tokenExpiry);
-    const textBody = textTemplate
+    const textBody = verifyTextTemplate
       .replace("[confirmLink]", verifyURL)
       .replace("[tokenExpiry]", tokenExpiry);
     const smtpObj = new SmtpSender(
       userEmail,
-      subjectTemplate,
+      verifySubjectTemplate,
       textBody,
       htmlBody
     );
-    return await smtpObj.sendEmail();
+    // return await smtpObj.sendEmail();
+    return true;
   } catch (err) {
     console.log(err);
   }
+}
+
+async function resetForgottenPassword(userId, userEmail, tempPass) {
+  try {
+    const tokenExpiry = "2 hours";
+    const token = signUserToken(userId, userEmail, "2h");
+    const resetURL = `${process.env.PASSWORD_RESET_URL}/${token}/${userId}`;
+
+    const htmlBody = resetHTMLTemplate
+      .replace("[resetLink]", resetURL)
+      .replace("[tokenExpiry]", tokenExpiry)
+      .replace("[tempPass]", tempPass);
+    const textBody = resetTextTemplate
+      .replace("[resetLink]", resetURL)
+      .replace("[tokenExpiry]", tokenExpiry)
+      .replace("[tempPass]", tempPass);
+
+    const smtpObj = new SmtpSender(
+      userEmail,
+      resetSubjectTemplate,
+      textBody,
+      htmlBody
+    );
+    // return await smtpObj.sendEmail();
+    return true;
+  } catch (err) {
+    console.log(err);
+  }
+}
+
+function temporaryPassword(length) {
+  let result = "";
+  const characters =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  for (var i = 0; i < length; i++) {
+    result += characters.charAt(Math.floor(Math.random() * characters.length));
+  }
+  return result;
 }
 
 function validateInput(input) {
@@ -83,4 +116,6 @@ module.exports = {
   addNewUser,
   askToConfirm,
   validateInput,
+  resetForgottenPassword,
+  temporaryPassword,
 };

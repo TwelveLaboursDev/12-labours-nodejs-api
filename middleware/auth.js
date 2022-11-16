@@ -12,7 +12,7 @@ const jwt = require("jsonwebtoken");
 // Used to generate the access token
 // The token will be used in login and activate the account
 function signUserToken(id, email, expiry) {
-  //Strings to set expiry: "120s", "2 days", "10h", "7d"
+  //Strings to set expiry: "1200s", "10h", "7d"
   const expiryTime = expiry ? expiry : "1200s"; //20 minutes default expiry time
 
   return jwt.sign({ idFromToken: id, emailFromToken: email }, SECRET_KEY, {
