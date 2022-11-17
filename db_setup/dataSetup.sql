@@ -28,7 +28,6 @@ insert into dhbs(dhb_name,island) values ('South Canterbury','South');
 insert into dhbs(dhb_name,island) values ('Southern','South');
 insert into dhbs(dhb_name,island) values ('West Coast','South');
 
-
 --Hospitals data setup
 insert into hospitals (hospital_name) values ('Murchison Hospital and Health Centre');
 insert into hospitals (hospital_name) values ('Nelson Bays Maternity Unit (Te Whare Whanau)');
@@ -71,8 +70,6 @@ insert into hospitals (hospital_name) values ('Buller Health');
 insert into hospitals (hospital_name) values ('Grey Base Hospital');
 insert into hospitals (hospital_name) values ('Whanganui Hospital');
 
-
 --Institutions data setup
 insert into institutions (institution_name) values('University of Auckland');
 insert into institutions (institution_name) values('Auckland University of Technology');
-
