@@ -225,31 +225,26 @@ function localUserRouter(localUserObject) {
       }
 
       if (!user.is_active) {
-        // const sendStatus = await askToConfirm(user.user_id, email);
-        const sendStatus = true;
+        const sendStatus = await askToConfirm(user.user_id, email);
         return res.status(403).json({
           message: `The email has not been activated. ${
             sendStatus
-              ? `Email has been sent to ${email}`
-              : "Unexpected error occurred. Try again later."
+              ? `Confirm email has been sent to ${email}`
+              : "Sending email failed. Try again later."
           }`,
         });
       }
 
+      // Generate a temporary password for user login
       const tempPass = temporaryPassword(14); // length should between 8 to 20
       if (await localUserObject.changePassword(user.user_id, null, tempPass)) {
         if (await resetForgottenPassword(user.user_id, email, tempPass)) {
           res.status(200).send({ message: `Email has been sent to ${email}` });
         }
-        // else {
-        //   res
-        //     .status(403)
-        //     .send({ message: "Unexpected error occurred. Try again later." });
-        // }
       } else {
-        res
-          .status(403)
-          .send({ message: "Unexpected error occurred. Try again later." });
+        res.status(403).send({
+          message: "Generate temporary password fail. Try again later.",
+        });
       }
     } catch (err) {
       console.log(err);
