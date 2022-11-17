@@ -20,15 +20,6 @@ async function addNewUser(req, res, next) {
     )
       return res.status(400).json({ message: "User Information is missing" });
 
-    // // Need to test out if really need this part
-    // if (
-    //   !validateInput(userInfo.firstName) ||
-    //   !validateInput(userInfo.lastName) ||
-    //   !validateInput(userInfo.password)
-    // ) {
-    //   return res.status(400).json({ message: "Invalid symbols are included" });
-    // }
-
     const userObj = new User();
     if (await userObj.emailExists(userInfo.email)) {
       return res.status(400).json({ message: "Email already exists" });
