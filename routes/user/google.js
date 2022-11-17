@@ -38,13 +38,16 @@ function googleUserRouter(googleUserObject) {
       try {
         const userId = req.newUserId;
         const user = await googleUserObject.getProfileById(userId);
-        const token = signUserToken(user.user_id, user.email);
-        res.status(200).send({ user: user, access_token: token });
+        if (user) {
+          const token = signUserToken(user.user_id, user.email);
+          res.status(200).send({ user: user, access_token: token });
+        } else {
+          return res.status(404).json({
+            message: "An error occurred while creating user. Try again.",
+          });
+        }
       } catch (err) {
         console.log(err);
-        return res.status(404).json({
-          message: "An error occurred while creating user. Try again.",
-        });
       }
     }
   );

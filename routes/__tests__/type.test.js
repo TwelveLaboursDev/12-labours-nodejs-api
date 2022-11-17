@@ -1,7 +1,7 @@
 const request = require("supertest");
 const express = require("express");
 const typeRouter = require("../type");
-const generateMockData = require("./mockFunction");
+const generateMockData = require("../__mocks__/function.mock");
 
 const getTypes = jest.fn();
 
