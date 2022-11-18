@@ -46,7 +46,7 @@ describe("Google user APIs", () => {
     const mockUser = {
       user_id: 8,
       title: "mockTitle",
-      firstName: "mockforstname`",
+      firstName: "mockfirstname`",
       lastName: "mocklastname'",
       email: "mockemail@gmail.com",
       password: 'mockpassword"',
@@ -57,7 +57,7 @@ describe("Google user APIs", () => {
         getProfileById.mockResolvedValue({
           user_id: 8,
           title: "mockTitle",
-          firstName: "mockforstname`",
+          firstName: "mockfirstname`",
           lastName: "mocklastname'",
           email: "mockemail@gmail.com",
           password: 'mockpassword"',

@@ -1,4 +1,3 @@
-
 CREATE TABLE hospitals(
 	hospital_id smallint GENERATED ALWAYS AS IDENTITY,
 	hospital_name  varchar(255) NOT NULL,
@@ -62,7 +61,6 @@ CREATE TABLE local_users (
 	  ON DELETE CASCADE
 );
 
-
 CREATE TABLE google_users (
 	user_id int NOT NULL UNIQUE,
 	google_id varchar(255) NOT NULL UNIQUE,
@@ -72,4 +70,3 @@ CREATE TABLE google_users (
 	  REFERENCES users(user_id)
 	  ON DELETE CASCADE
 );
-
