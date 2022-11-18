@@ -1,7 +1,7 @@
 const db = require("../__mocks__/db.mock");
 
-describe("get district health boards information queries", () => {
-  test("should return the north island dhbs data", async () => {
+describe("Get district health boards information queries", () => {
+  test("should return north island dhbs data", async () => {
     const { rows } = await db.query(
       `SELECT dhb_id AS value, dhb_name AS display 
         FROM dhbs 
@@ -15,7 +15,7 @@ describe("get district health boards information queries", () => {
     });
   });
 
-  test("should return the south island dhbs data", async () => {
+  test("should return south island dhbs data", async () => {
     const { rows } = await db.query(
       `SELECT dhb_id AS value, dhb_name AS display 
         FROM dhbs 
