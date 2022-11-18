@@ -71,7 +71,7 @@ async function resetForgottenPassword(userId, userEmail, tempPass) {
   try {
     const tokenExpiry = "2 hours";
     const token = signUserToken(userId, userEmail, "2h");
-    const resetURL = `${process.env.PASSWORD_RESET_URL}/${token}&${userId}`;
+    const resetURL = `${process.env.PASSWORD_RESET_URL}/${token}/${userId}`;
 
     const htmlBody = resetHTMLTemplate
       .replace("[resetLink]", resetURL)
