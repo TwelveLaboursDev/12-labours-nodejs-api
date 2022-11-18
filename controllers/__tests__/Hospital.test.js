@@ -4,8 +4,8 @@ describe("Get hospital information query", () => {
   test("should return hospital data", async () => {
     const { rows } = await db.query(
       `SELECT hospital_id AS value, hospital_name AS display
-        FROM hospitals
-        ORDER BY hospital_name`
+      FROM hospitals
+      ORDER BY hospital_name`
     );
     expect(rows).toBeDefined();
     expect(rows).toHaveLength(40);

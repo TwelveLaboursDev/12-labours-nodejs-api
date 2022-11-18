@@ -4,8 +4,8 @@ describe("Get institution information query", () => {
   test("should return institution data", async () => {
     const { rows } = await db.query(
       `SELECT institution_id AS value, institution_name AS display 
-        FROM institutions 
-        ORDER BY institution_name`
+      FROM institutions 
+      ORDER BY institution_name`
     );
     expect(rows).toBeDefined();
     expect(rows).toHaveLength(2);

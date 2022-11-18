@@ -4,8 +4,8 @@ describe("Get district health boards information queries", () => {
   test("should return north island dhbs data", async () => {
     const { rows } = await db.query(
       `SELECT dhb_id AS value, dhb_name AS display 
-        FROM dhbs 
-        WHERE island='North'`
+      FROM dhbs 
+      WHERE island='North'`
     );
     expect(rows).toBeDefined();
     expect(rows).toHaveLength(16);
@@ -18,8 +18,8 @@ describe("Get district health boards information queries", () => {
   test("should return south island dhbs data", async () => {
     const { rows } = await db.query(
       `SELECT dhb_id AS value, dhb_name AS display 
-        FROM dhbs 
-        WHERE island='South'`
+      FROM dhbs 
+      WHERE island='South'`
     );
     expect(rows).toBeDefined();
     expect(rows).toHaveLength(5);

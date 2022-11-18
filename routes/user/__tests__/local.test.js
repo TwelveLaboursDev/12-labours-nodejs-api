@@ -43,7 +43,7 @@ describe("Local user APIs", () => {
     const strategy = "local";
     const userInfo = {
       title: "mockTitle",
-      firstName: "mockforstname",
+      firstName: "mockfirstname",
       lastName: "mocklastname",
       email: "mockemail@gmail.com",
       password: "mockpassword",
@@ -78,7 +78,7 @@ describe("Local user APIs", () => {
       test("should respond with a 400 status code when contains invalid input", async () => {
         const userInfo = {
           title: "mockTitle",
-          firstName: "mockforstname`",
+          firstName: "mockfirstname`",
           lastName: "mocklastname'",
           email: "mockemail@gmail.com",
           password: 'mockpassword"',
@@ -276,7 +276,7 @@ describe("Local user APIs", () => {
         getProfileById.mockResolvedValue({
           user_id: 8,
           title: "mockTitle",
-          firstName: "mockforstname",
+          firstName: "mockfirstname",
           lastName: "mocklastname",
           email: "mockemail@gmail.com",
           password: "mockpassword",
@@ -339,7 +339,7 @@ describe("Local user APIs", () => {
         getProfileById.mockResolvedValue({
           user_id: 8,
           title: "mockTitle",
-          firstName: "mockforstname",
+          firstName: "mockfirstname",
           lastName: "mocklastname",
           email: "mockemail@gmail.com",
           password: "mockpassword",
