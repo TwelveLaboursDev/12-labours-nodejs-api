@@ -8,7 +8,6 @@ const {
   askToConfirm,
   validateInput,
   resetForgottenPassword,
-  temporaryPassword,
 } = require("./supportFunction");
 
 function localUserRouter(localUserObject) {
