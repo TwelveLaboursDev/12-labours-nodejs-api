@@ -235,16 +235,8 @@ function localUserRouter(localUserObject) {
         });
       }
 
-      // Generate a temporary password for user login
-      const tempPass = temporaryPassword(14); // length should between 8 to 20
-      if (await localUserObject.changePassword(user.user_id, null, tempPass)) {
-        if (await resetForgottenPassword(user.user_id, email, tempPass)) {
-          res.status(200).send({ message: `Email has been sent to ${email}` });
-        }
-      } else {
-        res.status(403).send({
-          message: "Generate temporary password fail. Try again later.",
-        });
+      if (await resetForgottenPassword(user.user_id, email)) {
+        res.status(200).send({ message: `Email has been sent to ${email}` });
       }
     } catch (err) {
       console.log(err);

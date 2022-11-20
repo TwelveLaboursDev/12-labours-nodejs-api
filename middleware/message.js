@@ -22,37 +22,26 @@ const verifyTextTemplate = `Email Confirmation \n\n
 const verifySubjectTemplate = "Please verify your email";
 
 const resetHTMLTemplate = `<!DOCTYPE html>
-                            <body>
-                                <div style='padding:10px'>
-                                    <h3>Reset Password</h3>
-                                    <br />
-                                    <div>We have received a request to reset your password.</div>
-                                    <br />
-                                    <div>A temporary password has been generated for you: </div>
-                                    <br />
-                                    <div style="background-color: lightgray; width: fit-content;">
-                                        <p style="font-size: larger;">[tempPass]</p>
-                                    </div>
-                                    <br />
-                                    <div>We highly recommend changing the temporary password as soon as possible.</div>
-                                    <br />
-                                    <div>You can reset your password by clicking the below link:</div>
-                                    <br />
-                                    <br />
-                                    <div>
-                                        <a href="[resetLink]">Click here to reset your password</a>
-                                    </div>
-                                    <br />
-                                    <br />
-                                    <div>This link will expire after [tokenExpiry].</div>
-                                </div>
-                            </body>`;
+                          <body>
+                              <div style='padding:10px;'>
+                                  <h3>Reset Password</h3>
+                                  <br />
+                                  <div>We have received the request to reset your account password.</div>
+                                  <br />
+                                  <div>Clicking the link below to reset your password.</div>
+                                  <br /><br />
+                                  <div>
+                                      <a href="[resetLink]" style="font-size: larger;">Reset your password</a>
+                                  </div>
+                                  <br /><br />
+                                  <div>This link will expire after [tokenExpiry].</div>
+                                  <br />
+                                  <div>If you haven't asked us to reset your password, simply ignore this email message.</div>
+                              </div>
+                          </body>`;
 
 const resetTextTemplate = `Reset Password \n\n
-                          We have received a request to reset your password. \n\n
-                          A temporary password has been generated for you: \n\n
-                          [tempPass] \n\n
-                          We highly recommend changing the temporary password as soon as possible. \n\n
+                          We have received the request to reset your account password. \n\n
                           Please copy and paste the below link in your browser to reset your password: \n\n
                           [resetLink] \n\n
                           This link will expire after [tokenExpiry].`;

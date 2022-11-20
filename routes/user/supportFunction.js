@@ -67,7 +67,7 @@ async function askToConfirm(userId, userEmail) {
   }
 }
 
-async function resetForgottenPassword(userId, userEmail, tempPass) {
+async function resetForgottenPassword(userId, userEmail) {
   try {
     const tokenExpiry = "2 hours";
     const token = signUserToken(userId, userEmail, "2h");
@@ -75,12 +75,10 @@ async function resetForgottenPassword(userId, userEmail, tempPass) {
 
     const htmlBody = resetHTMLTemplate
       .replace("[resetLink]", resetURL)
-      .replace("[tokenExpiry]", tokenExpiry)
-      .replace("[tempPass]", tempPass);
+      .replace("[tokenExpiry]", tokenExpiry);
     const textBody = resetTextTemplate
       .replace("[resetLink]", resetURL)
-      .replace("[tokenExpiry]", tokenExpiry)
-      .replace("[tempPass]", tempPass);
+      .replace("[tokenExpiry]", tokenExpiry);
 
     const smtpObj = new SmtpSender(
       userEmail,
@@ -93,16 +91,6 @@ async function resetForgottenPassword(userId, userEmail, tempPass) {
   } catch (err) {
     console.log(err);
   }
-}
-
-function temporaryPassword(length) {
-  let result = "";
-  const characters =
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-  for (var i = 0; i < length; i++) {
-    result += characters.charAt(Math.floor(Math.random() * characters.length));
-  }
-  return result;
 }
 
 function validateInput(input) {
