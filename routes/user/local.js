@@ -175,7 +175,7 @@ function localUserRouter(localUserObject) {
 
   router.post("/user/local/password", verifyToken, async (req, res) => {
     try {
-      const { userId, newPassword, oldPassword } = req.body;
+      const { userId, newPassword, oldPassword, reset } = req.body;
 
       if (!userId || !newPassword || !oldPassword) {
         return res
@@ -194,7 +194,11 @@ function localUserRouter(localUserObject) {
       }
 
       if (
-        await localUserObject.changePassword(userId, oldPassword, newPassword)
+        await localUserObject.changePassword(
+          userId,
+          reset ? null : oldPassword,
+          newPassword
+        )
       ) {
         res.status(200).send("OK");
       } else {
