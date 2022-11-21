@@ -427,6 +427,53 @@ describe("Local user APIs", () => {
     });
   });
 
+  describe("POST /user/local/password/reset", () => {
+    const email = "mockemail@gmail.com";
+
+    // describe("Send reset password email successfully", () => {
+    //   test("should respond with a 200 status code", async () => {});
+    // });
+    describe("Failed to send reset password email", () => {
+      test("should respond with a 400 status code when missing email", async () => {
+        const response = await request(app)
+          .post("/user/local/password/reset")
+          .send()
+          .set("Authorization", `${API_KEY}`);
+        expect(response.statusCode).toBe(400);
+        expect(response.body.message).toBe("Required email is missing");
+      });
+
+      test("should respond with a 400 status code when email does not exist", async () => {
+        localUserExists.mockResolvedValue(false);
+
+        const response = await request(app)
+          .post("/user/local/password/reset")
+          .send({ email })
+          .set("Authorization", `${API_KEY}`);
+        expect(response.statusCode).toBe(404);
+        expect(response.body.message).toBe("The email has not been registered");
+      });
+
+      test("should respond with a 400 status code when account not activated", async () => {
+        localUserExists.mockResolvedValue({ user_id: 8, is_active: false });
+        const sendStatus = true;
+
+        const response = await request(app)
+          .post("/user/local/password/reset")
+          .send({ email })
+          .set("Authorization", `${API_KEY}`);
+        expect(response.statusCode).toBe(403);
+        expect(response.body.message).toBe(
+          `The email has not been activated. ${
+            sendStatus
+              ? `Confirm email has been sent to ${email}`
+              : "Sending email failed. Try again later."
+          }`
+        );
+      });
+    });
+  });
+
   describe("POST /user/local/delete", () => {
     const userId = 8;
 

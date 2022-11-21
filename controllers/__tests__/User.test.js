@@ -171,15 +171,34 @@ describe("User queries", () => {
   });
 
   describe("Change password", () => {
-    test("should return rowCount == 1 if change successfully", async () => {
+    test("should return rowCount == 1 if change successfully with old password", async () => {
       const userId = 1;
       const newPassword = "newpassword";
       const oldPassword = userInfo.password;
+      let query = `UPDATE local_users 
+                SET password='${newPassword}', updated=Now() 
+                WHERE user_id=${userId}`;
 
       const { rowCount } = await db.query(
-        `UPDATE local_users 
-        SET password='${newPassword}', updated=Now() 
-        WHERE user_id=${userId} and password='${oldPassword}'`
+        oldPassword === null
+          ? query
+          : (query += ` and password='${oldPassword}'`)
+      );
+      expect(rowCount).toBe(1);
+    });
+
+    test("should return rowCount == 1 if change successfully without old password", async () => {
+      const userId = 1;
+      const newPassword = "newpassword";
+      const oldPassword = null;
+      let query = `UPDATE local_users 
+                SET password='${newPassword}', updated=Now() 
+                WHERE user_id=${userId}`;
+
+      const { rowCount } = await db.query(
+        oldPassword === null
+          ? query
+          : (query += ` and password='${oldPassword}'`)
       );
       expect(rowCount).toBe(1);
     });
