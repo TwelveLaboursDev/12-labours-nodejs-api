@@ -200,7 +200,8 @@ function localUserRouter(localUserObject) {
           newPassword
         )
       ) {
-        res.status(200).send("OK");
+        const user = await localUserObject.getProfileById(userId);
+        res.status(200).send(reset ? { email: user.email } : "OK");
       } else {
         res.status(403).json({
           message: "Your request can not be authenticated. Try again.",
@@ -211,8 +212,7 @@ function localUserRouter(localUserObject) {
     }
   });
 
-  // router.post("/user/local/password/reset", verifyClient, async (req, res) => {
-  router.post("/user/local/password/reset", async (req, res) => {
+  router.post("/user/local/password/reset", verifyClient, async (req, res) => {
     try {
       const { email } = req.body;
 
@@ -240,6 +240,10 @@ function localUserRouter(localUserObject) {
 
       if (await resetForgottenPassword(user.user_id, email)) {
         res.status(200).send({ message: `Email has been sent to ${email}` });
+      } else {
+        return res.status(403).json({
+          message: "Sending email failed. Try again later.",
+        });
       }
     } catch (err) {
       console.log(err);
