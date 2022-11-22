@@ -65,6 +65,37 @@ describe("User queries", () => {
     });
   });
 
+  describe("Update user information", () => {
+    test("should return rowCount==1 if update successfully", async () => {
+      const userInfo = {
+        userId: 1,
+        email: "email@gmail.com",
+        title: "Mr",
+        firstName: "firstname",
+        lastName: "lastname",
+        profession: "ICT",
+        institutionId: 2,
+        hospitalId: 3,
+        dhbId: 1,
+      };
+
+      let { rowCount } = await db.query(
+        `UPDATE users
+        SET title='${userInfo.title}', first_name='${
+          userInfo.firstName
+        }', last_name='${userInfo.lastName}', profession='${
+          userInfo.profession
+        }', institution_id=${userInfo.institutionId}, hospital_id=${
+          userInfo.hospitalId
+        }, dhb_id=${userInfo.dhbId}, updated=Now()
+        WHERE user_id=${
+          userInfo.userId
+        } AND LOWER(email)='${userInfo.email.toLowerCase()}'`
+      );
+      expect(rowCount).toBe(1);
+    });
+  });
+
   describe("Check local user exists", () => {
     test("should return rowCount==1, user id and account status if exist", async () => {
       const email = userInfo.email;

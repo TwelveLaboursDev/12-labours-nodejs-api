@@ -16,7 +16,6 @@ function localUserRouter(localUserObject) {
   router.post("/user/local/register", verifyClient, async (req, res) => {
     try {
       const { userInfo, strategy } = req.body;
-      console.log(userInfo);
 
       if (
         !userInfo ||
@@ -195,8 +194,8 @@ function localUserRouter(localUserObject) {
       }
 
       if (await localUserObject.updateUserInfo(userInfo)) {
+        // Get the latest user information
         const user = await localUserObject.getProfileById(userInfo.userId);
-
         res.status(200).send({ user: user });
       } else {
         return res
