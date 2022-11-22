@@ -187,11 +187,11 @@ function localUserRouter(localUserObject) {
       }
 
       if (!(await localUserObject.localUserExists(userInfo.email))) {
-        return res.status(403).json({ message: "Email does not exist" });
+        return res.status(400).json({ message: "Email does not exist" });
       }
 
       if (!(await localUserObject.getProfileById(userInfo.userId))) {
-        return res.status(403).json({ message: "Invalid user id provided" });
+        return res.status(400).json({ message: "Invalid user id provided" });
       }
 
       if (await localUserObject.updateUserInfo(userInfo)) {
