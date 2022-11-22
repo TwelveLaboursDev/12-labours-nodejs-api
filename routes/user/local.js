@@ -165,7 +165,7 @@ function localUserRouter(localUserObject) {
 
       const user = await localUserObject.getProfileById(req.idFromToken);
       if (user) {
-        return res.status(200).send({ user: user });
+        res.status(200).send({ user: user });
       } else {
         return res.status(403).json({ message: "User not found" });
       }
@@ -195,7 +195,7 @@ function localUserRouter(localUserObject) {
       }
 
       if (await localUserObject.updateUserInfo(userInfo)) {
-        return res.status(200).send("OK");
+        res.status(200).send("OK");
       } else {
         return res
           .status(403)
@@ -236,7 +236,7 @@ function localUserRouter(localUserObject) {
         const user = await localUserObject.getProfileById(userId);
         res.status(200).send(reset ? { email: user.email } : "OK");
       } else {
-        res.status(403).json({
+        return res.status(403).json({
           message: "Your request can not be authenticated. Try again.",
         });
       }
@@ -300,7 +300,7 @@ function localUserRouter(localUserObject) {
       if (await localUserObject.deleteUser(userId)) {
         res.status(200).send("OK");
       } else {
-        res
+        return res
           .status(403)
           .json({ message: "Your request can not be completed. Try again." });
       }
