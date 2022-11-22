@@ -190,12 +190,13 @@ function localUserRouter(localUserObject) {
         return res.status(400).json({ message: "Email does not exist" });
       }
 
-      const user = await localUserObject.getProfileById(userInfo.userId);
-      if (!user) {
+      if (!(await localUserObject.getProfileById(userInfo.userId))) {
         return res.status(400).json({ message: "Invalid user id provided" });
       }
 
       if (await localUserObject.updateUserInfo(userInfo)) {
+        const user = await localUserObject.getProfileById(userInfo.userId);
+
         res.status(200).send({ user: user });
       } else {
         return res
