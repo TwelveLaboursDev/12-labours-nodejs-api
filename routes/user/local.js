@@ -174,8 +174,7 @@ function localUserRouter(localUserObject) {
     }
   });
 
-  // router.post("/user/local/profile", verifyToken, async (req, res) => {
-  router.post("/user/local/profile/update", async (req, res) => {
+  router.post("/user/local/profile/update", verifyToken, async (req, res) => {
     try {
       const { userInfo } = req.body;
 
@@ -185,6 +184,14 @@ function localUserRouter(localUserObject) {
 
       if (!userInfo) {
         return res.status(400).json({ message: "User information is missing" });
+      }
+
+      if (!(await localUserObject.localUserExists(userInfo.email))) {
+        return res.status(403).json({ message: "Email does not exist" });
+      }
+
+      if (!(await localUserObject.getProfileById(userInfo.userId))) {
+        return res.status(403).json({ message: "Invalid user id provided" });
       }
 
       if (await localUserObject.updateUserInfo(userInfo)) {
