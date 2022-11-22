@@ -16,6 +16,7 @@ function localUserRouter(localUserObject) {
   router.post("/user/local/register", verifyClient, async (req, res) => {
     try {
       const { userInfo, strategy } = req.body;
+      console.log(userInfo);
 
       if (
         !userInfo ||
@@ -167,6 +168,31 @@ function localUserRouter(localUserObject) {
         return res.status(200).send({ user: user });
       } else {
         return res.status(403).json({ message: "User not found" });
+      }
+    } catch (err) {
+      console.log(err);
+    }
+  });
+
+  // router.post("/user/local/profile", verifyToken, async (req, res) => {
+  router.post("/user/local/profile/update", async (req, res) => {
+    try {
+      const { userInfo } = req.body;
+
+      if (req.tokenStatus == "expired") {
+        return res.status(401).json({ message: "Token expired" });
+      }
+
+      if (!userInfo) {
+        return res.status(400).json({ message: "User information is missing" });
+      }
+
+      if (await localUserObject.updateUserInfo(userInfo)) {
+        return res.status(200).send("OK");
+      } else {
+        return res
+          .status(403)
+          .json({ message: "Your request can not be completed. Try again." });
       }
     } catch (err) {
       console.log(err);
