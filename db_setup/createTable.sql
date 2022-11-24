@@ -70,3 +70,4 @@ CREATE TABLE google_users (
 	  REFERENCES users(user_id)
 	  ON DELETE CASCADE
 );
+
