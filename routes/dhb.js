@@ -1,24 +1,27 @@
-const Dhb = require('../controllers/Dhb');
+const express = require("express");
 
-const express=require('express');
-const router=express.Router();
+function dhbRouter(dhbObject) {
+  const router = express.Router();
 
-router.get('/dhbs',async (req,res)=>{
-  try{
-    const dhbObject=new Dhb();
-    const dhbsNorth=await dhbObject.getNorth();
-    const dhbsSouth=await dhbObject.getSouth();
+  router.get("/dhbs", async (req, res) => {
+    try {
+      const dhbsNorth = await dhbObject.getNorthDhbs();
+      const dhbsSouth = await dhbObject.getSouthDhbs();
 
-    if(dhbsNorth.length<=0 || dhbsSouth.length<=0)
-      res.status(403).send("Dhbs data not found");
-    else {
-      const dhbs=[{"label": "North Island","options":dhbsNorth},{"label": "South Island","options":dhbsSouth}]
-      res.status(200).send(dhbs);
+      if (dhbsNorth.length == 0 || dhbsSouth.length == 0) {
+        res.status(404).json({ message: "Dhbs data not found" });
+      } else {
+        const dhbs = [
+          { label: "North Island", options: dhbsNorth },
+          { label: "South Island", options: dhbsSouth },
+        ];
+        res.status(200).send(dhbs);
+      }
+    } catch (err) {
+      console.log(err);
     }
-  }
-  catch (err) {
-    console.log(err);
-  }
-});
+  });
+  return router;
+}
 
-module.exports=router;
+module.exports = dhbRouter;

@@ -1,12 +1,12 @@
+const router = require("express").Router();
+const User = require("../../controllers/User");
 
-var router =  require('express').Router();
-
-const userRoutes = require('./user').router;
-const localUserRoutes = require('./local');
-const googleUserRoutes = require('./google');
-
-router.use(userRoutes);
+const localUserRouter = require("./local");
+const localUserRoutes = localUserRouter(new User());
 router.use(localUserRoutes);
+
+const googleUserRouter = require("./google");
+const googleUserRoutes = googleUserRouter(new User());
 router.use(googleUserRoutes);
 
-module.exports= router;
+module.exports = router;
