@@ -171,10 +171,11 @@ describe("User queries", () => {
   });
 
   describe("Change password", () => {
-    test("should return rowCount == 1 if change successfully with old password", async () => {
-      const userId = 1;
-      const newPassword = "newpassword";
-      const oldPassword = userInfo.password;
+    const userId = 1;
+    const newPassword = "newpassword";
+    const oldPassword = userInfo.password;
+
+    test("should return rowCount == 1 and matched new password if change successfully with old password", async () => {
       let query = `UPDATE local_users 
                 SET password='${newPassword}', updated=Now() 
                 WHERE user_id=${userId}`;
@@ -185,14 +186,44 @@ describe("User queries", () => {
           : (query += ` and password='${oldPassword}'`)
       );
       expect(rowCount).toBe(1);
+
+      const { rows } = await db.query(
+        `SELECT password
+        FROM local_users
+        WHERE user_id=${userId}`
+      );
+      expect(rows[0].password).toBe(newPassword);
     });
 
-    test("should return rowCount == 1 if change successfully without old password", async () => {
-      const userId = 1;
-      const newPassword = "newpassword";
+    test("should return rowCount == 0 when password not match", async () => {
+      const newNewPassword = "newnewpassword";
+      const oldPassword = "fakepassword";
+
+      let query = `UPDATE local_users 
+                SET password='${newNewPassword}', updated=Now() 
+                WHERE user_id=${userId}`;
+
+      const { rowCount } = await db.query(
+        oldPassword === null
+          ? query
+          : (query += ` and password='${oldPassword}'`)
+      );
+      expect(rowCount).toBe(0);
+
+      const { rows } = await db.query(
+        `SELECT password
+        FROM local_users
+        WHERE user_id=${userId}`
+      );
+      expect(rows[0].password).toBe(newPassword);
+      expect(rows[0].password).not.toBe(newNewPassword);
+    });
+
+    test("should return rowCount == 1 and matched new password if change successfully without old password", async () => {
+      const newNewPassword = "newnewpassword";
       const oldPassword = null;
       let query = `UPDATE local_users 
-                SET password='${newPassword}', updated=Now() 
+                SET password='${newNewPassword}', updated=Now() 
                 WHERE user_id=${userId}`;
 
       const { rowCount } = await db.query(
@@ -201,6 +232,13 @@ describe("User queries", () => {
           : (query += ` and password='${oldPassword}'`)
       );
       expect(rowCount).toBe(1);
+
+      const { rows } = await db.query(
+        `SELECT password
+        FROM local_users
+        WHERE user_id=${userId}`
+      );
+      expect(rows[0].password).toBe(newNewPassword);
     });
   });
 
