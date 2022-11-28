@@ -226,6 +226,30 @@ describe("User queries", () => {
       expect(rows[0].password).toBe(newPassword);
     });
 
+    test("should return rowCount == 0 when password not match", async () => {
+      const newNewPassword = "newnewpassword";
+      const oldPassword = "fakepassword";
+
+      let query = `UPDATE local_users 
+                SET password='${newNewPassword}', updated=Now() 
+                WHERE user_id=${userId}`;
+
+      const { rowCount } = await db.query(
+        oldPassword === null
+          ? query
+          : (query += ` and password='${oldPassword}'`)
+      );
+      expect(rowCount).toBe(0);
+
+      const { rows } = await db.query(
+        `SELECT password
+        FROM local_users
+        WHERE user_id=${userId}`
+      );
+      expect(rows[0].password).toBe(newPassword);
+      expect(rows[0].password).not.toBe(newNewPassword);
+    });
+
     test("should return rowCount == 1 and matched new password if change successfully without old password", async () => {
       const newNewPassword = "newnewpassword";
       const oldPassword = null;
