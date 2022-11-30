@@ -4,7 +4,11 @@ const {
   signUserToken,
   verifyClient,
 } = require("../../middleware/auth");
-const { askToConfirm, validateInput } = require("./supportFunction");
+const {
+  askToConfirm,
+  validateInput,
+  resetForgottenPassword,
+} = require("./supportFunction");
 
 function localUserRouter(localUserObject) {
   const router = express.Router();
@@ -97,7 +101,6 @@ function localUserRouter(localUserObject) {
       } else {
         if (tokenStatus === "expired") {
           const sendStatus = await askToConfirm(user.user_id, emailFromToken);
-
           return res.status(400).json(
             sendStatus
               ? {
@@ -172,7 +175,7 @@ function localUserRouter(localUserObject) {
 
   router.post("/user/local/password", verifyToken, async (req, res) => {
     try {
-      const { userId, newPassword, oldPassword } = req.body;
+      const { userId, newPassword, oldPassword, reset } = req.body;
 
       if (!userId || !newPassword || !oldPassword) {
         return res
@@ -191,12 +194,55 @@ function localUserRouter(localUserObject) {
       }
 
       if (
-        await localUserObject.changePassword(userId, oldPassword, newPassword)
+        await localUserObject.changePassword(
+          userId,
+          reset ? null : oldPassword,
+          newPassword
+        )
       ) {
-        res.status(200).send("OK");
+        const user = await localUserObject.getProfileById(userId);
+        res.status(200).send(reset ? { email: user.email } : "OK");
       } else {
         res.status(403).json({
           message: "Your request can not be authenticated. Try again.",
+        });
+      }
+    } catch (err) {
+      console.log(err);
+    }
+  });
+
+  router.post("/user/local/password/reset", verifyClient, async (req, res) => {
+    try {
+      const { email } = req.body;
+
+      if (!email) {
+        return res.status(400).json({ message: "Required email is missing" });
+      }
+
+      const user = await localUserObject.localUserExists(email);
+      if (!user) {
+        return res
+          .status(404)
+          .json({ message: "The email has not been registered" });
+      }
+
+      if (!user.is_active) {
+        const sendStatus = await askToConfirm(user.user_id, email);
+        return res.status(403).json({
+          message: `The email has not been activated. ${
+            sendStatus
+              ? `Confirm email has been sent to ${email}`
+              : "Sending email failed. Try again later."
+          }`,
+        });
+      }
+
+      if (await resetForgottenPassword(user.user_id, email)) {
+        res.status(200).send({ message: `Email has been sent to ${email}` });
+      } else {
+        return res.status(403).json({
+          message: "Sending email failed. Try again later.",
         });
       }
     } catch (err) {

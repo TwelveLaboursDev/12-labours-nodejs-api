@@ -1,7 +1,10 @@
 let {
-  subjectTemplate,
-  textTemplate,
-  htmlTemplate,
+  verifyHTMLTemplate,
+  verifyTextTemplate,
+  verifySubjectTemplate,
+  resetHTMLTemplate,
+  resetTextTemplate,
+  resetSubjectTemplate,
 } = require("../../middleware/message");
 const { signUserToken } = require("../../middleware/auth");
 const SmtpSender = require("../../middleware/smtp");
@@ -41,23 +44,50 @@ async function addNewUser(req, res, next) {
 
 async function askToConfirm(userId, userEmail) {
   try {
-    const tokenExpiry = "2 days"; //2 days
-    const token = signUserToken(userId, userEmail, tokenExpiry);
-
+    const tokenExpiry = "2 days";
+    const token = signUserToken(userId, userEmail, "2d");
     const verifyURL = `${process.env.USER_VERIFY_URL}/${token}`;
-    const htmlBody = htmlTemplate
+
+    const htmlBody = verifyHTMLTemplate
       .replace("[confirmLink]", verifyURL)
       .replace("[tokenExpiry]", tokenExpiry);
-    const textBody = textTemplate
+    const textBody = verifyTextTemplate
       .replace("[confirmLink]", verifyURL)
       .replace("[tokenExpiry]", tokenExpiry);
     const smtpObj = new SmtpSender(
       userEmail,
-      subjectTemplate,
+      verifySubjectTemplate,
       textBody,
       htmlBody
     );
-    return await smtpObj.sendEmail();
+    // return await smtpObj.sendEmail();
+    return true;
+  } catch (err) {
+    console.log(err);
+  }
+}
+
+async function resetForgottenPassword(userId, userEmail) {
+  try {
+    const tokenExpiry = "2 hours";
+    const token = signUserToken(userId, userEmail, "2h");
+    const resetURL = `${process.env.PASSWORD_RESET_URL}/${token}/${userId}`;
+
+    const htmlBody = resetHTMLTemplate
+      .replace("[resetLink]", resetURL)
+      .replace("[tokenExpiry]", tokenExpiry);
+    const textBody = resetTextTemplate
+      .replace("[resetLink]", resetURL)
+      .replace("[tokenExpiry]", tokenExpiry);
+
+    const smtpObj = new SmtpSender(
+      userEmail,
+      resetSubjectTemplate,
+      textBody,
+      htmlBody
+    );
+    // return await smtpObj.sendEmail();
+    return true;
   } catch (err) {
     console.log(err);
   }
@@ -74,4 +104,5 @@ module.exports = {
   addNewUser,
   askToConfirm,
   validateInput,
+  resetForgottenPassword,
 };
