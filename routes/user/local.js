@@ -38,7 +38,7 @@ function localUserRouter(localUserObject) {
           .json({ message: "Invalid symbols are included" });
       }
 
-      if (await localUserObject.localUserExists(userInfo.email)) {
+      if (await localUserObject.emailExists(userInfo.email)) {
         return res.status(409).json({ message: "Email already exists" });
       }
 
@@ -185,7 +185,7 @@ function localUserRouter(localUserObject) {
         return res.status(400).json({ message: "User information is missing" });
       }
 
-      if (!(await localUserObject.localUserExists(userInfo.email))) {
+      if (!(await localUserObject.emailExists(userInfo.email))) {
         return res.status(400).json({ message: "Email does not exist" });
       }
 

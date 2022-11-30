@@ -6,6 +6,7 @@ const { signUserToken } = require("../../../middleware/auth");
 const authenticateLocal = jest.fn();
 const createUser = jest.fn();
 const localUserExists = jest.fn();
+const emailExists = jest.fn();
 const activateLocal = jest.fn();
 const getProfileById = jest.fn();
 const changePassword = jest.fn();
@@ -16,6 +17,7 @@ const localUserRoutes = localUserRouter({
   authenticateLocal,
   createUser,
   localUserExists,
+  emailExists,
   activateLocal,
   getProfileById,
   changePassword,
@@ -35,6 +37,7 @@ describe("Local user APIs", () => {
     authenticateLocal.mockReset();
     createUser.mockReset();
     localUserExists.mockReset();
+    emailExists.mockReset();
     activateLocal.mockReset();
     getProfileById.mockReset();
     changePassword.mockReset();
@@ -54,7 +57,7 @@ describe("Local user APIs", () => {
 
     describe("Register new user successfully", () => {
       test("should respond with a 200 status code and correct email address", async () => {
-        localUserExists.mockResolvedValue(null);
+        emailExists.mockResolvedValue(false);
         createUser.mockResolvedValue(8);
 
         const response = await request(app)
@@ -62,7 +65,7 @@ describe("Local user APIs", () => {
           .send({ userInfo, strategy })
           .set("Authorization", `${API_KEY}`);
         expect(response.statusCode).toBe(200);
-        expect(localUserExists.mock.calls.length).toBe(1);
+        expect(emailExists.mock.calls.length).toBe(1);
         expect(createUser.mock.calls.length).toBe(1);
         expect(response.body.email).toBe(userInfo.email);
       });
@@ -96,19 +99,19 @@ describe("Local user APIs", () => {
       });
 
       test("should respond with a 409 status code when the email exists", async () => {
-        localUserExists.mockResolvedValue([{ user_id: 8, is_active: true }]);
+        emailExists.mockResolvedValue(true);
 
         const response = await request(app)
           .post("/user/local/register")
           .send({ userInfo, strategy })
           .set("Authorization", `${API_KEY}`);
         expect(response.statusCode).toBe(409);
-        expect(localUserExists.mock.calls.length).toBe(1);
+        expect(emailExists.mock.calls.length).toBe(1);
         expect(response.body.message).toBe("Email already exists");
       });
 
       test("should respond with a 404 status code when database occurs error", async () => {
-        localUserExists.mockResolvedValue(null);
+        emailExists.mockResolvedValue(false);
         createUser.mockResolvedValue(null);
 
         const response = await request(app)
@@ -116,7 +119,7 @@ describe("Local user APIs", () => {
           .send({ userInfo, strategy })
           .set("Authorization", `${API_KEY}`);
         expect(response.statusCode).toBe(404);
-        expect(localUserExists.mock.calls.length).toBe(1);
+        expect(emailExists.mock.calls.length).toBe(1);
         expect(createUser.mock.calls.length).toBe(1);
         expect(response.body.message).toBe(
           "An error occurred while creating user. Try again."
@@ -387,7 +390,7 @@ describe("Local user APIs", () => {
 
     describe("Update user profile successfully", () => {
       test("should respond with a 200 status code", async () => {
-        localUserExists.mockResolvedValue(true);
+        emailExists.mockResolvedValue(true);
         getProfileById.mockResolvedValue(userInfo);
         updateUserInfo.mockResolvedValue(true);
 
@@ -397,7 +400,7 @@ describe("Local user APIs", () => {
           .set("access_token", `Bearer ${userToken}`);
         expect(response.statusCode).toBe(200);
         expect(getProfileById.mock.calls.length).toBe(2);
-        expect(localUserExists.mock.calls.length).toBe(1);
+        expect(emailExists.mock.calls.length).toBe(1);
         expect(updateUserInfo.mock.calls.length).toBe(1);
         expect(response.body.user).toEqual(userInfo);
       });
@@ -416,19 +419,19 @@ describe("Local user APIs", () => {
       });
 
       test("should respond with a 400 status code when email not found", async () => {
-        localUserExists.mockResolvedValue(null);
+        emailExists.mockResolvedValue(false);
 
         const response = await request(app)
           .post("/user/local/profile/update")
           .send({ userInfo })
           .set("access_token", `Bearer ${userToken}`);
         expect(response.statusCode).toBe(400);
-        expect(localUserExists.mock.calls.length).toBe(1);
+        expect(emailExists.mock.calls.length).toBe(1);
         expect(response.body.message).toBe("Email does not exist");
       });
 
       test("should respond with a 400 status code when user not found", async () => {
-        localUserExists.mockResolvedValue({ user_id: 8, is_active: true });
+        emailExists.mockResolvedValue(true);
         getProfileById.mockResolvedValue(null);
 
         const response = await request(app)
@@ -436,13 +439,13 @@ describe("Local user APIs", () => {
           .send({ userInfo })
           .set("access_token", `Bearer ${userToken}`);
         expect(response.statusCode).toBe(400);
-        expect(localUserExists.mock.calls.length).toBe(1);
+        expect(emailExists.mock.calls.length).toBe(1);
         expect(getProfileById.mock.calls.length).toBe(1);
         expect(response.body.message).toBe("Invalid user id provided");
       });
 
       test("should respond with a 403 status code when update failed", async () => {
-        localUserExists.mockResolvedValue({ user_id: 8, is_active: true });
+        emailExists.mockResolvedValue(true);
         getProfileById.mockResolvedValue(userInfo);
         updateUserInfo.mockResolvedValue(false);
 
@@ -451,7 +454,7 @@ describe("Local user APIs", () => {
           .send({ userInfo })
           .set("access_token", `Bearer ${userToken}`);
         expect(response.statusCode).toBe(403);
-        expect(localUserExists.mock.calls.length).toBe(1);
+        expect(emailExists.mock.calls.length).toBe(1);
         expect(getProfileById.mock.calls.length).toBe(1);
         expect(updateUserInfo.mock.calls.length).toBe(1);
         expect(response.body.message).toBe(
