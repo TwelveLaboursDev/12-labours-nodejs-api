@@ -38,7 +38,7 @@ function localUserRouter(localUserObject) {
           .json({ message: "Invalid symbols are included" });
       }
 
-      if (await localUserObject.localUserExists(userInfo.email)) {
+      if (await localUserObject.emailExists(userInfo.email)) {
         return res.status(409).json({ message: "Email already exists" });
       }
 
@@ -164,9 +164,43 @@ function localUserRouter(localUserObject) {
 
       const user = await localUserObject.getProfileById(req.idFromToken);
       if (user) {
-        return res.status(200).send({ user: user });
+        res.status(200).send({ user: user });
       } else {
         return res.status(403).json({ message: "User not found" });
+      }
+    } catch (err) {
+      console.log(err);
+    }
+  });
+
+  router.post("/user/local/profile/update", verifyToken, async (req, res) => {
+    try {
+      const { userInfo } = req.body;
+
+      if (req.tokenStatus == "expired") {
+        return res.status(401).json({ message: "Token expired" });
+      }
+
+      if (!userInfo) {
+        return res.status(400).json({ message: "User information is missing" });
+      }
+
+      if (!(await localUserObject.emailExists(userInfo.email))) {
+        return res.status(400).json({ message: "Email does not exist" });
+      }
+
+      if (!(await localUserObject.getProfileById(userInfo.userId))) {
+        return res.status(400).json({ message: "Invalid user id provided" });
+      }
+
+      if (await localUserObject.updateUserInfo(userInfo)) {
+        // Get the latest user information
+        const user = await localUserObject.getProfileById(userInfo.userId);
+        res.status(200).send({ user: user });
+      } else {
+        return res
+          .status(403)
+          .json({ message: "Your request can not be completed. Try again." });
       }
     } catch (err) {
       console.log(err);
@@ -203,7 +237,7 @@ function localUserRouter(localUserObject) {
         const user = await localUserObject.getProfileById(userId);
         res.status(200).send(reset ? { email: user.email } : "OK");
       } else {
-        res.status(403).json({
+        return res.status(403).json({
           message: "Your request can not be authenticated. Try again.",
         });
       }
@@ -267,7 +301,7 @@ function localUserRouter(localUserObject) {
       if (await localUserObject.deleteUser(userId)) {
         res.status(200).send("OK");
       } else {
-        res
+        return res
           .status(403)
           .json({ message: "Your request can not be completed. Try again." });
       }

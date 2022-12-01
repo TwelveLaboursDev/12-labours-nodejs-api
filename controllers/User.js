@@ -70,6 +70,25 @@ class User {
     return platformResult.rowCount == 1 ? newUserId : null;
   }
 
+  async updateUserInfo(userInfo) {
+    let { rowCount } = await db
+      .query(
+        `UPDATE users
+        SET title='${userInfo.title}', first_name='${
+          userInfo.firstName
+        }', last_name='${userInfo.lastName}', profession='${
+          userInfo.profession
+        }', institution_id=${userInfo.institutionId}, hospital_id=${
+          userInfo.hospitalId
+        }, dhb_id=${userInfo.dhbId}, updated=Now()
+        WHERE user_id=${
+          userInfo.userId
+        } AND LOWER(email)='${userInfo.email.toLowerCase()}'`
+      )
+      .catch((err) => console.log(err.stack));
+    return rowCount == 1;
+  }
+
   async localUserExists(email) {
     let { rowCount, rows } = await db
       .query(
