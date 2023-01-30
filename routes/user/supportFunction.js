@@ -60,8 +60,8 @@ async function askToConfirm(userId, userEmail) {
       textBody,
       htmlBody
     );
-    // return await smtpObj.sendEmail();
-    return true;
+    return await smtpObj.sendEmail();
+    //return true;
   } catch (err) {
     console.log(err);
   }
@@ -86,8 +86,8 @@ async function resetForgottenPassword(userId, userEmail) {
       textBody,
       htmlBody
     );
-    // return await smtpObj.sendEmail();
-    return true;
+    return await smtpObj.sendEmail();
+    //return true;
   } catch (err) {
     console.log(err);
   }
