@@ -55,7 +55,7 @@ describe("User queries", () => {
       const newUserId = 1; // Only one user will be created, hence the user id should be 1
 
       const { rowCount } = await db.query(
-        strategy === "local"
+        strategy == "local"
           ? `INSERT INTO local_users (user_id, password, is_active, created)
             VALUES (${newUserId}, '${userInfo.password}', false, Now())`
           : `INSERT INTO google_users (user_id, google_id, created)
@@ -212,7 +212,7 @@ describe("User queries", () => {
                 WHERE user_id=${userId}`;
 
       const { rowCount } = await db.query(
-        oldPassword === null
+        oldPassword == null
           ? query
           : (query += ` and password='${oldPassword}'`)
       );
@@ -235,7 +235,7 @@ describe("User queries", () => {
                 WHERE user_id=${userId}`;
 
       const { rowCount } = await db.query(
-        oldPassword === null
+        oldPassword == null
           ? query
           : (query += ` and password='${oldPassword}'`)
       );
@@ -258,7 +258,7 @@ describe("User queries", () => {
                 WHERE user_id=${userId}`;
 
       const { rowCount } = await db.query(
-        oldPassword === null
+        oldPassword == null
           ? query
           : (query += ` and password='${oldPassword}'`)
       );

@@ -8,6 +8,8 @@ const {
   askToConfirm,
   validateInput,
   resetForgottenPassword,
+  hashEncrypt,
+  decryptCompare,
 } = require("./supportFunction");
 
 function localUserRouter(localUserObject) {
@@ -30,8 +32,8 @@ function localUserRouter(localUserObject) {
 
       if (
         !validateInput(userInfo.firstName) ||
-        !validateInput(userInfo.lastName) ||
-        !validateInput(userInfo.password)
+        !validateInput(userInfo.lastName)
+        // !validateInput(userInfo.password)
       ) {
         return res
           .status(400)
@@ -42,6 +44,7 @@ function localUserRouter(localUserObject) {
         return res.status(409).json({ message: "Email already exists" });
       }
 
+      userInfo.password = hashEncrypt(userInfo.password);
       const newUserId = await localUserObject.createUser(userInfo, strategy);
       if (!newUserId) {
         return res.status(404).json({
@@ -99,7 +102,7 @@ function localUserRouter(localUserObject) {
       if (user.is_active) {
         return res.status(200).send({ alreadyActive: true });
       } else {
-        if (tokenStatus === "expired") {
+        if (tokenStatus == "expired") {
           const sendStatus = await askToConfirm(user.user_id, emailFromToken);
           return res.status(400).json(
             sendStatus
@@ -138,19 +141,22 @@ function localUserRouter(localUserObject) {
           .json({ message: "Invalid symbols are included" });
       }
 
-      const userFound = await localUserObject.authenticateLocal(
-        email,
-        password
-      );
-      if (!userFound) {
-        return res.status(403).json({
-          message: "User with specified email/password was not found",
+      const dbPassword = await localUserObject.queryDbPassword("email", email);
+      if (decryptCompare(password, dbPassword)) {
+        const userFound = await localUserObject.authenticateLocal(email);
+        if (!userFound) {
+          return res.status(403).json({
+            message: "User with specified email/password was not found",
+          });
+        }
+        const user = await localUserObject.getProfileById(userFound.user_id);
+        const token = signUserToken(user.user_id, user.email);
+        res.status(200).send({ user: user, access_token: token });
+      } else {
+        return res.status(404).json({
+          message: "The password does not match the account",
         });
       }
-
-      const user = await localUserObject.getProfileById(userFound.user_id);
-      const token = signUserToken(user.user_id, user.email);
-      res.status(200).send({ user: user, access_token: token });
     } catch (err) {
       console.log(err);
     }
@@ -221,24 +227,21 @@ function localUserRouter(localUserObject) {
         return res.status(401).json({ message: "Authentication failed" });
       }
 
-      if (!validateInput(oldPassword) || !validateInput(newPassword)) {
-        return res
-          .status(400)
-          .json({ message: "Invalid symbols are included" });
-      }
-
-      if (
-        await localUserObject.changePassword(
-          userId,
-          reset ? null : oldPassword,
-          newPassword
-        )
-      ) {
-        const user = await localUserObject.getProfileById(userId);
-        res.status(200).send(reset ? { email: user.email } : "OK");
+      const dbPassword = await localUserObject.queryDbPassword("id", userId);
+      if (reset || decryptCompare(oldPassword, dbPassword)) {
+        if (
+          await localUserObject.changePassword(userId, hashEncrypt(newPassword))
+        ) {
+          const user = await localUserObject.getProfileById(userId);
+          res.status(200).send(reset ? { email: user.email } : "OK");
+        } else {
+          return res.status(403).json({
+            message: "Your request can not be authenticated. Try again.",
+          });
+        }
       } else {
-        return res.status(403).json({
-          message: "Your request can not be authenticated. Try again.",
+        return res.status(404).json({
+          message: "The password does not match the account",
         });
       }
     } catch (err) {

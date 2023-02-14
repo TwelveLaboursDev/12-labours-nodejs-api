@@ -1,3 +1,5 @@
+const bcrypt = require("bcrypt");
+const crypto = require("crypto-js");
 let {
   verifyHTMLTemplate,
   verifyTextTemplate,
@@ -100,9 +102,22 @@ function validateInput(input) {
   return true;
 }
 
+function hashEncrypt(password) {
+  const saltRounds = 12;
+  const salt = bcrypt.genSaltSync(saltRounds);
+  const hash = bcrypt.hashSync(password, salt);
+  return hash;
+}
+function decryptCompare(password, hash) {
+  const compare = bcrypt.compareSync(password, hash);
+  return compare;
+}
+
 module.exports = {
   addNewUser,
   askToConfirm,
   validateInput,
   resetForgottenPassword,
+  hashEncrypt,
+  decryptCompare,
 };
