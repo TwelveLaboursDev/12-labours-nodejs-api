@@ -1,16 +1,16 @@
 const verifyHTMLTemplate = `<!DOCTYPE html>
                             <body>
-                              <div style='padding:10px'>
-                                <h3>Email Confirmation</h3>
-                                <br/><br/>
-                                <div>Please verify your email to gain access to 12 Labours portal.</div>
-                                <br/><br/>
-                                <div>Your link is active for [tokenExpiry]. After that, you will need to resend the verification email.</div>
-                                <br/><br/>
-                                <div>
-                                  <a href='[confirmLink]'>Click here to confirm email.</a>
+                                <div style='padding:10px'>
+                                    <h3>Email Confirmation</h3>
+                                    <br /><br />
+                                    <div>Please verify your email to gain access to 12 Labours portal.</div>
+                                    <br /><br />
+                                    <div>Your link is active for [tokenExpiry]. After that, you will need to resend the verification email.</div>
+                                    <br /><br />
+                                    <div>
+                                        <a href='[confirmLink]' style="font-size: larger;">Click here to confirm email</a>
+                                    </div>
                                 </div>
-                              </div>
                             </body>`;
 
 const verifyTextTemplate = `Email Confirmation \n\n
@@ -31,7 +31,7 @@ const resetHTMLTemplate = `<!DOCTYPE html>
                                   <div>Clicking the link below to reset your password.</div>
                                   <br /><br />
                                   <div>
-                                      <a href="[resetLink]" style="font-size: larger;">Reset your password</a>
+                                      <a href='[resetLink]' style="font-size: larger;">Reset your password</a>
                                   </div>
                                   <br /><br />
                                   <div>This link will expire after [tokenExpiry].</div>
