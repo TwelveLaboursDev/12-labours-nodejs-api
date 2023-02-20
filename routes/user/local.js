@@ -8,6 +8,7 @@ const {
   askToConfirm,
   validateInput,
   resetForgottenPassword,
+  AESDecrypt,
   hashEncrypt,
   decryptCompare,
 } = require("./supportFunction");
@@ -29,11 +30,11 @@ function localUserRouter(localUserObject) {
       ) {
         return res.status(400).json({ message: "User Information is missing" });
       }
-
+      const decryptedPassword = AESDecrypt(userInfo.password);
       if (
         !validateInput(userInfo.firstName) ||
-        !validateInput(userInfo.lastName)
-        // !validateInput(userInfo.password)
+        !validateInput(userInfo.lastName) ||
+        !validateInput(decryptedPassword)
       ) {
         return res
           .status(400)
@@ -44,7 +45,7 @@ function localUserRouter(localUserObject) {
         return res.status(409).json({ message: "Email already exists" });
       }
 
-      userInfo.password = hashEncrypt(userInfo.password);
+      userInfo.password = hashEncrypt(decryptedPassword);
       const newUserId = await localUserObject.createUser(userInfo, strategy);
       if (!newUserId) {
         return res.status(404).json({
@@ -126,7 +127,6 @@ function localUserRouter(localUserObject) {
       }
     }
   );
-
   router.post("/user/local/login", verifyClient, async (req, res) => {
     try {
       const { email, password } = req.body;
@@ -135,14 +135,15 @@ function localUserRouter(localUserObject) {
         return res.status(400).json({ message: "Provide email and password" });
       }
 
-      if (!validateInput(email) || !validateInput(password)) {
+      const decryptedPassword = AESDecrypt(password);
+      if (!validateInput(email) || !validateInput(decryptedPassword)) {
         return res
           .status(400)
           .json({ message: "Invalid symbols are included" });
       }
 
       const dbPassword = await localUserObject.queryDbPassword("email", email);
-      if (decryptCompare(password, dbPassword)) {
+      if (decryptCompare(decryptedPassword, dbPassword)) {
         const userFound = await localUserObject.authenticateLocal(email);
         if (!userFound) {
           return res.status(403).json({
@@ -223,14 +224,25 @@ function localUserRouter(localUserObject) {
           .json({ message: "Incomplete data was provided" });
       }
 
+      const decryptedNewPassword = AESDecrypt(newPassword);
+      const decryptedOldPassword = AESDecrypt(oldPassword);
+      if (!validateInput(decryptedNewPassword)) {
+        return res
+          .status(400)
+          .json({ message: "Invalid symbols are included" });
+      }
+
       if (req.tokenStatus != "valid" || userId != req.idFromToken) {
         return res.status(401).json({ message: "Authentication failed" });
       }
 
       const dbPassword = await localUserObject.queryDbPassword("id", userId);
-      if (reset || decryptCompare(oldPassword, dbPassword)) {
+      if (reset || decryptCompare(decryptedOldPassword, dbPassword)) {
         if (
-          await localUserObject.changePassword(userId, hashEncrypt(newPassword))
+          await localUserObject.changePassword(
+            userId,
+            hashEncrypt(decryptedNewPassword)
+          )
         ) {
           const user = await localUserObject.getProfileById(userId);
           res.status(200).send(reset ? { email: user.email } : "OK");
