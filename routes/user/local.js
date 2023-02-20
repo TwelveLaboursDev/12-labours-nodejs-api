@@ -143,21 +143,25 @@ function localUserRouter(localUserObject) {
           .json({ message: "Invalid symbols are included" });
       }
 
-      const dbPassword = await localUserObject.queryDbPassword("email", email);
-      if (decryptCompare(decryptedPassword, dbPassword)) {
-        const userFound = await localUserObject.authenticateLocal(email);
-        if (!userFound) {
-          return res.status(403).json({
-            message: "User with specified email/password was not found",
+      const userFound = await localUserObject.authenticateLocal(email);
+      if (!userFound) {
+        return res.status(403).json({
+          message: "User with specified email was not found",
+        });
+      } else {
+        const dbPassword = await localUserObject.queryDbPassword(
+          "email",
+          email
+        );
+        if (decryptCompare(decryptedPassword, dbPassword)) {
+          const user = await localUserObject.getProfileById(userFound.user_id);
+          const token = signUserToken(user.user_id, user.email);
+          res.status(200).send({ user: user, access_token: token });
+        } else {
+          return res.status(404).json({
+            message: "The password does not match the account",
           });
         }
-        const user = await localUserObject.getProfileById(userFound.user_id);
-        const token = signUserToken(user.user_id, user.email);
-        res.status(200).send({ user: user, access_token: token });
-      } else {
-        return res.status(404).json({
-          message: "The password does not match the account",
-        });
       }
     } catch (err) {
       console.log(err);
