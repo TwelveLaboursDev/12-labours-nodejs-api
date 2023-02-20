@@ -58,7 +58,7 @@ beforeAll(async () => {
      
   CREATE TABLE local_users (
       user_id int NOT NULL UNIQUE,
-      password varchar(20) NOT NULL,
+      password varchar(100) NOT NULL,
       is_active boolean NOT NULL,
       created timestamptz,
       updated timestamptz DEFAULT now(),

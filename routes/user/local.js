@@ -30,6 +30,7 @@ function localUserRouter(localUserObject) {
       ) {
         return res.status(400).json({ message: "User Information is missing" });
       }
+
       const decryptedPassword = AESDecrypt(userInfo.password);
       if (
         !validateInput(userInfo.firstName) ||

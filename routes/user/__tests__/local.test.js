@@ -2,7 +2,10 @@ const request = require("supertest");
 const express = require("express");
 const localUserRouter = require("../local");
 const { signUserToken } = require("../../../middleware/auth");
+const ASEEncryptPassword = require("../__mocks__/AESEncrypt.mock");
+const hashEncryptPassword = require("../__mocks__/hashEncrypt.mock");
 
+const queryDbPassword = jest.fn();
 const authenticateLocal = jest.fn();
 const createUser = jest.fn();
 const localUserExists = jest.fn();
@@ -14,6 +17,7 @@ const deleteUser = jest.fn();
 const updateUserInfo = jest.fn();
 
 const localUserRoutes = localUserRouter({
+  queryDbPassword,
   authenticateLocal,
   createUser,
   localUserExists,
@@ -34,6 +38,7 @@ describe("Local user APIs", () => {
   app.use(localUserRoutes);
 
   beforeEach(() => {
+    queryDbPassword.mockReset();
     authenticateLocal.mockReset();
     createUser.mockReset();
     localUserExists.mockReset();
@@ -52,7 +57,7 @@ describe("Local user APIs", () => {
       firstName: "mockfirstname",
       lastName: "mocklastname",
       email: "mockemail@gmail.com",
-      password: "mockpassword",
+      password: ASEEncryptPassword("mockpassword"),
     };
 
     describe("Register new user successfully", () => {
@@ -87,7 +92,7 @@ describe("Local user APIs", () => {
           firstName: "mockfirstname`",
           lastName: "mocklastname'",
           email: "mockemail@gmail.com",
-          password: 'mockpassword"',
+          password: ASEEncryptPassword('mockpassword"'),
         };
 
         const response = await request(app)
@@ -274,10 +279,11 @@ describe("Local user APIs", () => {
 
   describe("POST /user/local/login", () => {
     const email = "mockemail@gmail.com";
-    const password = "mockpassword";
+    const password = ASEEncryptPassword("mockpassword");
 
     describe("Login successfully", () => {
       test("should respond with a 200 status code and correct user information", async () => {
+        queryDbPassword.mockResolvedValue(hashEncryptPassword("mockpassword"));
         authenticateLocal.mockResolvedValue({ user_id: 8 });
         getProfileById.mockResolvedValue({
           user_id: 8,
@@ -285,7 +291,7 @@ describe("Local user APIs", () => {
           firstName: "mockfirstname",
           lastName: "mocklastname",
           email: "mockemail@gmail.com",
-          password: "mockpassword",
+          password: hashEncryptPassword("mockpassword"),
         });
 
         const response = await request(app)
@@ -293,11 +299,12 @@ describe("Local user APIs", () => {
           .send({ email, password })
           .set("Authorization", `${API_KEY}`);
         expect(response.statusCode).toBe(200);
+        expect(queryDbPassword.mock.calls.length).toBe(1);
         expect(authenticateLocal.mock.calls.length).toBe(1);
         expect(getProfileById.mock.calls.length).toBe(1);
         expect(response.body.user.user_id).toBe(8);
         expect(response.body.user.email).toBe(email);
-        expect(response.body.user.password).toBe(password);
+        expect(response.body.user.password.slice(0, 7)).toBe("$2b$12$");
       });
     });
 
@@ -313,7 +320,7 @@ describe("Local user APIs", () => {
 
       test("should respond with a 400 status code when contains invalid input", async () => {
         const email = "mockemail@gmail.com";
-        const password = "mockpassword`'";
+        const password = ASEEncryptPassword("mockpassword`'");
 
         const response = await request(app)
           .post("/user/local/login")
