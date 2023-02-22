@@ -40,6 +40,10 @@ function localUserRouter(localUserObject) {
         return res
           .status(400)
           .json({ message: "Invalid symbols are included" });
+      } else if (decryptedPassword == "") {
+        return res.status(401).json({
+          message: "Server unauthorized, please contact 12 Labours Dev Team.",
+        });
       }
 
       if (await localUserObject.emailExists(userInfo.email)) {
@@ -153,7 +157,10 @@ function localUserRouter(localUserObject) {
           "email",
           email
         );
-        if (decryptCompare(decryptedPassword, dbPassword)) {
+        if (
+          decryptedPassword != "" &&
+          decryptCompare(decryptedPassword, dbPassword)
+        ) {
           const user = await localUserObject.getProfileById(userFound.user_id);
           const token = signUserToken(user.user_id, user.email);
           res.status(200).send({ user: user, access_token: token });
@@ -242,7 +249,11 @@ function localUserRouter(localUserObject) {
       }
 
       const dbPassword = await localUserObject.queryDbPassword("id", userId);
-      if (reset || decryptCompare(decryptedOldPassword, dbPassword)) {
+      if (
+        reset ||
+        (decryptedOldPassword != "" &&
+          decryptCompare(decryptedOldPassword, dbPassword))
+      ) {
         if (
           await localUserObject.changePassword(
             userId,
@@ -258,7 +269,7 @@ function localUserRouter(localUserObject) {
         }
       } else {
         return res.status(404).json({
-          message: "The password does not match the account",
+          message: "The old password does not match the account",
         });
       }
     } catch (err) {
