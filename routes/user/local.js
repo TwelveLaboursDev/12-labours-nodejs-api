@@ -32,6 +32,12 @@ function localUserRouter(localUserObject) {
       }
 
       const decryptedPassword = AESDecrypt(userInfo.password);
+      if (decryptedPassword == "") {
+        return res.status(401).json({
+          message: "Server unauthorized, please contact 12 Labours Dev Team.",
+        });
+      }
+
       if (
         !validateInput(userInfo.firstName) ||
         !validateInput(userInfo.lastName) ||
@@ -40,10 +46,6 @@ function localUserRouter(localUserObject) {
         return res
           .status(400)
           .json({ message: "Invalid symbols are included" });
-      } else if (decryptedPassword == "") {
-        return res.status(401).json({
-          message: "Server unauthorized, please contact 12 Labours Dev Team.",
-        });
       }
 
       if (await localUserObject.emailExists(userInfo.email)) {

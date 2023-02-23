@@ -3,6 +3,7 @@ const express = require("express");
 const localUserRouter = require("../local");
 const { signUserToken } = require("../../../middleware/auth");
 const ASEEncryptPassword = require("../__mocks__/AESEncrypt.mock");
+const fakeASEEncryptPassword = require("../__mocks__/AESEncryptWithFakeKey.mock");
 const hashEncryptPassword = require("../__mocks__/hashEncrypt.mock");
 
 const queryDbPassword = jest.fn();
@@ -77,6 +78,25 @@ describe("Local user APIs", () => {
     });
 
     describe("Failed to register new user", () => {
+      test("should respond with a 401 status code when SECRET_KEY not match", async () => {
+        const userInfo = {
+          title: "mockTitle",
+          firstName: "mockfirstname`",
+          lastName: "mocklastname'",
+          email: "mockemail@gmail.com",
+          password: fakeASEEncryptPassword('mockpassword"'),
+        };
+
+        const response = await request(app)
+          .post("/user/local/register")
+          .send({ userInfo, strategy })
+          .set("Authorization", `${API_KEY}`);
+        expect(response.statusCode).toBe(401);
+        expect(response.body.message).toBe(
+          "Server unauthorized, please contact 12 Labours Dev Team."
+        );
+      });
+
       test("should respond with a 400 status code when missing user information", async () => {
         const response = await request(app)
           .post("/user/local/register")
