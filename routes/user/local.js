@@ -72,7 +72,7 @@ function localUserRouter(localUserObject) {
       const { email } = req.body;
 
       if (!email) {
-        return res.status(404).json({ message: "Email not provided" });
+        return res.status(400).json({ message: "Email not provided" });
       }
 
       const user = await localUserObject.localUserExists(email);
@@ -112,7 +112,7 @@ function localUserRouter(localUserObject) {
       } else {
         if (tokenStatus == "expired") {
           const sendStatus = await askToConfirm(user.user_id, emailFromToken);
-          return res.status(400).json(
+          return res.status(401).json(
             sendStatus
               ? {
                   message:
@@ -127,13 +127,14 @@ function localUserRouter(localUserObject) {
             res.status(200).send("OK");
           } else {
             return res
-              .status(400)
-              .json({ message: "Unexpected error occurred. Try again later." });
+              .status(500)
+              .json({ message: "Database error occurred. Try again later." });
           }
         }
       }
     }
   );
+
   router.post("/user/local/login", verifyClient, async (req, res) => {
     try {
       const { email, password } = req.body;
@@ -151,7 +152,7 @@ function localUserRouter(localUserObject) {
 
       const userFound = await localUserObject.authenticateLocal(email);
       if (!userFound) {
-        return res.status(403).json({
+        return res.status(404).json({
           message: "User with specified email was not found",
         });
       } else {
@@ -187,7 +188,7 @@ function localUserRouter(localUserObject) {
       if (user) {
         res.status(200).send({ user: user });
       } else {
-        return res.status(403).json({ message: "User not found" });
+        return res.status(404).json({ message: "User not found" });
       }
     } catch (err) {
       console.log(err);
@@ -207,7 +208,7 @@ function localUserRouter(localUserObject) {
       }
 
       if (!(await localUserObject.emailExists(userInfo.email))) {
-        return res.status(400).json({ message: "Email does not exist" });
+        return res.status(404).json({ message: "Email does not exist" });
       }
 
       if (!(await localUserObject.getProfileById(userInfo.userId))) {
@@ -220,8 +221,8 @@ function localUserRouter(localUserObject) {
         res.status(200).send({ user: user });
       } else {
         return res
-          .status(403)
-          .json({ message: "Your request can not be completed. Try again." });
+          .status(500)
+          .json({ message: "Your request cannot be completed. Try again." });
       }
     } catch (err) {
       console.log(err);
@@ -234,7 +235,7 @@ function localUserRouter(localUserObject) {
 
       if (!userId || !newPassword || !oldPassword) {
         return res
-          .status(404)
+          .status(400)
           .json({ message: "Incomplete data was provided" });
       }
 
@@ -265,8 +266,8 @@ function localUserRouter(localUserObject) {
           const user = await localUserObject.getProfileById(userId);
           res.status(200).send(reset ? { email: user.email } : "OK");
         } else {
-          return res.status(403).json({
-            message: "Your request can not be authenticated. Try again.",
+          return res.status(500).json({
+            message: "Your request cannot be processed. Try again.",
           });
         }
       } else {
@@ -296,7 +297,7 @@ function localUserRouter(localUserObject) {
 
       if (!user.is_active) {
         const sendStatus = await askToConfirm(user.user_id, email);
-        return res.status(403).json({
+        return res.status(401).json({
           message: `The email has not been activated. ${
             sendStatus
               ? `Confirm email has been sent to ${email}`
@@ -308,7 +309,7 @@ function localUserRouter(localUserObject) {
       if (await resetForgottenPassword(user.user_id, email)) {
         res.status(200).send({ message: `Email has been sent to ${email}` });
       } else {
-        return res.status(403).json({
+        return res.status(424).json({
           message: "Sending email failed. Try again later.",
         });
       }
@@ -323,7 +324,7 @@ function localUserRouter(localUserObject) {
 
       if (!userId) {
         return res
-          .status(404)
+          .status(400)
           .json({ message: "Incomplete data was provided" });
       }
 
@@ -335,8 +336,8 @@ function localUserRouter(localUserObject) {
         res.status(200).send("OK");
       } else {
         return res
-          .status(403)
-          .json({ message: "Your request can not be completed. Try again." });
+          .status(500)
+          .json({ message: "Your request cannot be completed. Try again." });
       }
     } catch (err) {
       console.log(err);
