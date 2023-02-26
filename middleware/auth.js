@@ -31,7 +31,7 @@ function verifyToken(req, res, next) {
   const token = rawToken.split(" ")[1];
   jwt.verify(token, SECRET_KEY, (err, payload) => {
     if (err) {
-      if (err.name === "TokenExpiredError") {
+      if (err.name == "TokenExpiredError") {
         payload = jwt.verify(token, SECRET_KEY, { ignoreExpiration: true });
         req.tokenStatus = "expired";
       } else {

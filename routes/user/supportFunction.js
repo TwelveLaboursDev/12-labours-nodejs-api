@@ -1,3 +1,5 @@
+const CryptoJS = require("crypto-js");
+const bcrypt = require("bcrypt");
 let {
   verifyHTMLTemplate,
   verifyTextTemplate,
@@ -100,9 +102,31 @@ function validateInput(input) {
   return true;
 }
 
+function AESDecrypt(password) {
+  const decrypted = CryptoJS.AES.decrypt(
+    password,
+    process.env.SECRET_KEY
+  ).toString(CryptoJS.enc.Utf8);
+  return decrypted;
+}
+
+function hashEncrypt(password) {
+  const saltRounds = 12;
+  const salt = bcrypt.genSaltSync(saltRounds);
+  const hash = bcrypt.hashSync(password, salt);
+  return hash;
+}
+function decryptCompare(password, hash) {
+  const compare = bcrypt.compareSync(password, hash);
+  return compare;
+}
+
 module.exports = {
   addNewUser,
   askToConfirm,
   validateInput,
   resetForgottenPassword,
+  AESDecrypt,
+  hashEncrypt,
+  decryptCompare,
 };

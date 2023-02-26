@@ -1,13 +1,27 @@
 const db = require("../config/db");
 
 class User {
-  async authenticateLocal(email, password) {
+  async queryDbPassword(type, value) {
+    let query = `SELECT lu.password
+    FROM  local_users lu
+    INNER JOIN users u ON lu.user_id=u.user_id`;
+    let { rowCount, rows } = await db
+      .query(
+        type == "id"
+          ? (query += ` WHERE u.user_id='${value}'`)
+          : (query += ` WHERE LOWER(u.email)='${value}'`)
+      )
+      .catch((err) => console.log(err.stack));
+    return rowCount > 0 ? rows[0].password : null;
+  }
+
+  async authenticateLocal(email) {
     let { rowCount, rows } = await db
       .query(
         `SELECT u.user_id 
         FROM users u 
         INNER JOIN local_users lu ON u.user_id=lu.user_id
-        WHERE LOWER(u.email)='${email.toLowerCase()}' AND lu.password='${password}' AND lu.is_active=true`
+        WHERE LOWER(u.email)='${email.toLowerCase()}' AND lu.is_active=true`
       )
       .catch((err) => console.log(err.stack));
     return rowCount == 1 ? rows[0] : null;
@@ -60,7 +74,7 @@ class User {
     // Insert user data into the local/google user table
     let platformResult = await db
       .query(
-        strategy === "local"
+        strategy == "local"
           ? `INSERT INTO local_users (user_id, password, is_active, created)
             VALUES (${newUserId}, '${userInfo.password}', false, Now())`
           : `INSERT INTO google_users (user_id, google_id, created)
@@ -140,15 +154,12 @@ class User {
     return rowCount == 1 ? rows[0] : null;
   }
 
-  async changePassword(userId, oldPassword, newPassword) {
-    let query = `UPDATE local_users 
-                SET password='${newPassword}', updated=Now() 
-                WHERE user_id=${userId}`;
+  async changePassword(userId, newPassword) {
     let { rowCount } = await db
       .query(
-        oldPassword === null
-          ? query
-          : (query += ` and password='${oldPassword}'`)
+        `UPDATE local_users 
+        SET password='${newPassword}', updated=Now() 
+        WHERE user_id=${userId}`
       )
       .catch((err) => console.log(err.stack));
     return rowCount == 1;

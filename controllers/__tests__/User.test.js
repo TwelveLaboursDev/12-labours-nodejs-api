@@ -55,13 +55,45 @@ describe("User queries", () => {
       const newUserId = 1; // Only one user will be created, hence the user id should be 1
 
       const { rowCount } = await db.query(
-        strategy === "local"
+        strategy == "local"
           ? `INSERT INTO local_users (user_id, password, is_active, created)
             VALUES (${newUserId}, '${userInfo.password}', false, Now())`
           : `INSERT INTO google_users (user_id, google_id, created)
             VALUES (${newUserId}, '${userInfo.googleId}', Now())`
       );
       expect(rowCount).toBe(1);
+    });
+  });
+
+  describe("Query password by id/email", () => {
+    test("should return rowCount==1 if query by id successfully", async () => {
+      const type = "id";
+      const value = 1; // user id
+      let query = `SELECT lu.password
+                  FROM  local_users lu
+                  INNER JOIN users u ON lu.user_id=u.user_id`;
+      let { rowCount, rows } = await db.query(
+        type == "id"
+          ? (query += ` WHERE u.user_id='${value}'`)
+          : (query += ` WHERE LOWER(u.email)='${value}'`)
+      );
+      expect(rowCount).toBe(1);
+      expect(rows[0].password).toBe("password");
+    });
+
+    test("should return rowCount==1 if query by email successfully", async () => {
+      const type = "email";
+      const value = "email@gmail.com"; // user email
+      let query = `SELECT lu.password
+                  FROM  local_users lu
+                  INNER JOIN users u ON lu.user_id=u.user_id`;
+      let { rowCount, rows } = await db.query(
+        type == "id"
+          ? (query += ` WHERE u.user_id='${value}'`)
+          : (query += ` WHERE LOWER(u.email)='${value}'`)
+      );
+      expect(rowCount).toBe(1);
+      expect(rows[0].password).toBe("password");
     });
   });
 
@@ -204,17 +236,12 @@ describe("User queries", () => {
   describe("Change password", () => {
     const userId = 1;
     const newPassword = "newpassword";
-    const oldPassword = userInfo.password;
 
     test("should return rowCount == 1 and matched new password if change successfully with old password", async () => {
-      let query = `UPDATE local_users 
-                SET password='${newPassword}', updated=Now() 
-                WHERE user_id=${userId}`;
-
       const { rowCount } = await db.query(
-        oldPassword === null
-          ? query
-          : (query += ` and password='${oldPassword}'`)
+        `UPDATE local_users 
+        SET password='${newPassword}', updated=Now() 
+        WHERE user_id=${userId}`
       );
       expect(rowCount).toBe(1);
 
@@ -224,52 +251,6 @@ describe("User queries", () => {
         WHERE user_id=${userId}`
       );
       expect(rows[0].password).toBe(newPassword);
-    });
-
-    test("should return rowCount == 0 when password not match", async () => {
-      const newNewPassword = "newnewpassword";
-      const oldPassword = "fakepassword";
-
-      let query = `UPDATE local_users 
-                SET password='${newNewPassword}', updated=Now() 
-                WHERE user_id=${userId}`;
-
-      const { rowCount } = await db.query(
-        oldPassword === null
-          ? query
-          : (query += ` and password='${oldPassword}'`)
-      );
-      expect(rowCount).toBe(0);
-
-      const { rows } = await db.query(
-        `SELECT password
-        FROM local_users
-        WHERE user_id=${userId}`
-      );
-      expect(rows[0].password).toBe(newPassword);
-      expect(rows[0].password).not.toBe(newNewPassword);
-    });
-
-    test("should return rowCount == 1 and matched new password if change successfully without old password", async () => {
-      const newNewPassword = "newnewpassword";
-      const oldPassword = null;
-      let query = `UPDATE local_users 
-                SET password='${newNewPassword}', updated=Now() 
-                WHERE user_id=${userId}`;
-
-      const { rowCount } = await db.query(
-        oldPassword === null
-          ? query
-          : (query += ` and password='${oldPassword}'`)
-      );
-      expect(rowCount).toBe(1);
-
-      const { rows } = await db.query(
-        `SELECT password
-        FROM local_users
-        WHERE user_id=${userId}`
-      );
-      expect(rows[0].password).toBe(newNewPassword);
     });
   });
 

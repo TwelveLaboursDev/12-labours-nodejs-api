@@ -2,7 +2,11 @@ const request = require("supertest");
 const express = require("express");
 const localUserRouter = require("../local");
 const { signUserToken } = require("../../../middleware/auth");
+const ASEEncryptPassword = require("../__mocks__/AESEncrypt.mock");
+const fakeASEEncryptPassword = require("../__mocks__/AESEncryptWithFakeKey.mock");
+const hashEncryptPassword = require("../__mocks__/hashEncrypt.mock");
 
+const queryDbPassword = jest.fn();
 const authenticateLocal = jest.fn();
 const createUser = jest.fn();
 const localUserExists = jest.fn();
@@ -14,6 +18,7 @@ const deleteUser = jest.fn();
 const updateUserInfo = jest.fn();
 
 const localUserRoutes = localUserRouter({
+  queryDbPassword,
   authenticateLocal,
   createUser,
   localUserExists,
@@ -34,6 +39,7 @@ describe("Local user APIs", () => {
   app.use(localUserRoutes);
 
   beforeEach(() => {
+    queryDbPassword.mockReset();
     authenticateLocal.mockReset();
     createUser.mockReset();
     localUserExists.mockReset();
@@ -52,7 +58,7 @@ describe("Local user APIs", () => {
       firstName: "mockfirstname",
       lastName: "mocklastname",
       email: "mockemail@gmail.com",
-      password: "mockpassword",
+      password: ASEEncryptPassword("mockpassword"),
     };
 
     describe("Register new user successfully", () => {
@@ -81,13 +87,32 @@ describe("Local user APIs", () => {
         expect(response.body.message).toBe("User Information is missing");
       });
 
+      test("should respond with a 401 status code when SECRET_KEY not match", async () => {
+        const userInfo = {
+          title: "mockTitle",
+          firstName: "mockfirstname`",
+          lastName: "mocklastname'",
+          email: "mockemail@gmail.com",
+          password: fakeASEEncryptPassword('mockpassword"'),
+        };
+
+        const response = await request(app)
+          .post("/user/local/register")
+          .send({ userInfo, strategy })
+          .set("Authorization", `${API_KEY}`);
+        expect(response.statusCode).toBe(401);
+        expect(response.body.message).toBe(
+          "Server unauthorized, please contact 12 Labours Dev Team."
+        );
+      });
+
       test("should respond with a 400 status code when contains invalid input", async () => {
         const userInfo = {
           title: "mockTitle",
           firstName: "mockfirstname`",
           lastName: "mocklastname'",
           email: "mockemail@gmail.com",
-          password: 'mockpassword"',
+          password: ASEEncryptPassword('mockpassword"'),
         };
 
         const response = await request(app)
@@ -158,12 +183,12 @@ describe("Local user APIs", () => {
     });
 
     describe("Failed to send the email", () => {
-      test("should respond with a 404 status code when missing email", async () => {
+      test("should respond with a 400 status code when missing email", async () => {
         const response = await request(app)
           .post("/user/local/email")
           .send()
           .set("Authorization", `${API_KEY}`);
-        expect(response.statusCode).toBe(404);
+        expect(response.statusCode).toBe(400);
         expect(response.body.message).toBe("Email not provided");
       });
 
@@ -189,7 +214,7 @@ describe("Local user APIs", () => {
     const tokenStatus = "valid";
 
     describe("Activate the account successfully", () => {
-      test("should respond with a 200 status code and active status", async () => {
+      test("should respond with a 200 status code when account is already activated", async () => {
         localUserExists.mockResolvedValue({ user_id: 8, is_active: true });
 
         const response = await request(app)
@@ -232,28 +257,26 @@ describe("Local user APIs", () => {
         );
       });
 
-      test("should respond with a 400 status code when token expired", async () => {
+      // test("should respond with a 401 status code when token expired", async () => {
+      //   const tokenStatus = "expired";
+      //   localUserExists.mockResolvedValue({ user_id: 8, is_active: false });
+      //   activateLocal.mockResolvedValue(false);
+
+      //   const response = await request(app)
+      //     .post("/user/local/confirm")
+      //     .send({ emailFromToken, idFromToken, tokenStatus })
+      //     .set("Authorization", `${API_KEY}`)
+      //     .set("access_token", `Bearer ${userToken}`);
+      //   expect(response.statusCode).toBe(500);
+      //   expect(localUserExists.mock.calls.length).toBe(1);
+      //   expect(activateLocal.mock.calls.length).toBe(1);
+      //   expect(response.body.message).toBe(
+      //     "Your verification has expired. A new email with confirmation link has been sent to your inbox."
+      //   );
+      // });
+
+      test("should respond with a 500 status code when database error", async () => {
         const tokenStatus = "valid";
-        // This should be changed based on the real situation
-        // const sendStatus = false;
-
-        localUserExists.mockResolvedValue({ user_id: 8, is_active: false });
-
-        const response = await request(app)
-          .post("/user/local/confirm")
-          .send({ emailFromToken, idFromToken, tokenStatus })
-          .set("Authorization", `${API_KEY}`)
-          .set("access_token", `Bearer ${userToken}`);
-        expect(response.statusCode).toBe(400);
-        expect(localUserExists.mock.calls.length).toBe(1);
-        // expect(response.body.message).toBe(
-        //   sendStatus
-        //     ? "Your verification has expired. A new email with confirmation link has been sent to your inbox."
-        //     : "Unexpected error occurred. Try again later."
-        // );
-      });
-
-      test("should respond with a 400 status code when database error", async () => {
         localUserExists.mockResolvedValue({ user_id: 8, is_active: false });
         activateLocal.mockResolvedValue(false);
 
@@ -262,11 +285,11 @@ describe("Local user APIs", () => {
           .send({ emailFromToken, idFromToken, tokenStatus })
           .set("Authorization", `${API_KEY}`)
           .set("access_token", `Bearer ${userToken}`);
-        expect(response.statusCode).toBe(400);
+        expect(response.statusCode).toBe(500);
         expect(localUserExists.mock.calls.length).toBe(1);
         expect(activateLocal.mock.calls.length).toBe(1);
         expect(response.body.message).toBe(
-          "Unexpected error occurred. Try again later."
+          "Database error occurred. Try again later."
         );
       });
     });
@@ -274,18 +297,19 @@ describe("Local user APIs", () => {
 
   describe("POST /user/local/login", () => {
     const email = "mockemail@gmail.com";
-    const password = "mockpassword";
+    const password = ASEEncryptPassword("mockpassword");
 
     describe("Login successfully", () => {
       test("should respond with a 200 status code and correct user information", async () => {
         authenticateLocal.mockResolvedValue({ user_id: 8 });
+        queryDbPassword.mockResolvedValue(hashEncryptPassword("mockpassword"));
         getProfileById.mockResolvedValue({
           user_id: 8,
           title: "mockTitle",
           firstName: "mockfirstname",
           lastName: "mocklastname",
           email: "mockemail@gmail.com",
-          password: "mockpassword",
+          password: hashEncryptPassword("mockpassword"),
         });
 
         const response = await request(app)
@@ -294,10 +318,11 @@ describe("Local user APIs", () => {
           .set("Authorization", `${API_KEY}`);
         expect(response.statusCode).toBe(200);
         expect(authenticateLocal.mock.calls.length).toBe(1);
+        expect(queryDbPassword.mock.calls.length).toBe(1);
         expect(getProfileById.mock.calls.length).toBe(1);
         expect(response.body.user.user_id).toBe(8);
         expect(response.body.user.email).toBe(email);
-        expect(response.body.user.password).toBe(password);
+        expect(response.body.user.password.slice(0, 7)).toBe("$2b$12$");
       });
     });
 
@@ -313,7 +338,7 @@ describe("Local user APIs", () => {
 
       test("should respond with a 400 status code when contains invalid input", async () => {
         const email = "mockemail@gmail.com";
-        const password = "mockpassword`'";
+        const password = ASEEncryptPassword("mockpassword`'");
 
         const response = await request(app)
           .post("/user/local/login")
@@ -323,17 +348,34 @@ describe("Local user APIs", () => {
         expect(response.body.message).toBe("Invalid symbols are included");
       });
 
-      test("should respond with a 400 status code when email or password not found", async () => {
+      test("should respond with a 404 status code when email not found", async () => {
         authenticateLocal.mockResolvedValue(null);
 
         const response = await request(app)
           .post("/user/local/login")
           .send({ email, password })
           .set("Authorization", `${API_KEY}`);
-        expect(response.statusCode).toBe(403);
+        expect(response.statusCode).toBe(404);
         expect(authenticateLocal.mock.calls.length).toBe(1);
         expect(response.body.message).toBe(
-          "User with specified email/password was not found"
+          "User with specified email was not found"
+        );
+      });
+
+      test("should respond with a 404 status code when password not match", async () => {
+        const email = "mockemail@gmail.com";
+        const password = ASEEncryptPassword("fakepassword");
+        authenticateLocal.mockResolvedValue({ user_id: 8 });
+        queryDbPassword.mockResolvedValue(hashEncryptPassword("mockpassword"));
+
+        const response = await request(app)
+          .post("/user/local/login")
+          .send({ email, password })
+          .set("Authorization", `${API_KEY}`);
+        expect(response.statusCode).toBe(404);
+        expect(queryDbPassword.mock.calls.length).toBe(1);
+        expect(response.body.message).toBe(
+          "The password does not match the account"
         );
       });
     });
@@ -360,18 +402,18 @@ describe("Local user APIs", () => {
     });
 
     describe("Failed to get the profile", () => {
-      test("should respond with a 403 status code when user not found", async () => {
+      // test("should respond with a 401 status code when token expired", async () => {});
+
+      test("should respond with a 404 status code when user not found", async () => {
         getProfileById.mockResolvedValue(null);
 
         const response = await request(app)
           .get("/user/local/profile")
           .set("access_token", `Bearer ${userToken}`);
-        expect(response.statusCode).toBe(403);
+        expect(response.statusCode).toBe(404);
         expect(getProfileById.mock.calls.length).toBe(1);
         expect(response.body.message).toBe("User not found");
       });
-
-      // test("should respond with a 401 status code when token expired", async () => {});
     });
   });
 
@@ -418,19 +460,19 @@ describe("Local user APIs", () => {
         expect(response.body.message).toBe("User information is missing");
       });
 
-      test("should respond with a 400 status code when email not found", async () => {
+      test("should respond with a 404 status code when email not found", async () => {
         emailExists.mockResolvedValue(false);
 
         const response = await request(app)
           .post("/user/local/profile/update")
           .send({ userInfo })
           .set("access_token", `Bearer ${userToken}`);
-        expect(response.statusCode).toBe(400);
+        expect(response.statusCode).toBe(404);
         expect(emailExists.mock.calls.length).toBe(1);
         expect(response.body.message).toBe("Email does not exist");
       });
 
-      test("should respond with a 400 status code when user not found", async () => {
+      test("should respond with a 400 status code when invalid user id used", async () => {
         emailExists.mockResolvedValue(true);
         getProfileById.mockResolvedValue(null);
 
@@ -444,7 +486,7 @@ describe("Local user APIs", () => {
         expect(response.body.message).toBe("Invalid user id provided");
       });
 
-      test("should respond with a 403 status code when update failed", async () => {
+      test("should respond with a 500 status code when update failed", async () => {
         emailExists.mockResolvedValue(true);
         getProfileById.mockResolvedValue(userInfo);
         updateUserInfo.mockResolvedValue(false);
@@ -453,12 +495,12 @@ describe("Local user APIs", () => {
           .post("/user/local/profile/update")
           .send({ userInfo })
           .set("access_token", `Bearer ${userToken}`);
-        expect(response.statusCode).toBe(403);
+        expect(response.statusCode).toBe(500);
         expect(emailExists.mock.calls.length).toBe(1);
         expect(getProfileById.mock.calls.length).toBe(1);
         expect(updateUserInfo.mock.calls.length).toBe(1);
         expect(response.body.message).toBe(
-          "Your request can not be completed. Try again."
+          "Your request cannot be completed. Try again."
         );
       });
     });
@@ -466,11 +508,12 @@ describe("Local user APIs", () => {
 
   describe("POST /user/local/password", () => {
     const userId = 8;
-    const newPassword = "newmockpassword";
-    const oldPassword = "mockpassword";
+    const newPassword = ASEEncryptPassword("newmockpassword");
+    const oldPassword = ASEEncryptPassword("mockpassword");
 
     describe("Change the password successfully", () => {
       test("should respond with a 200 status code", async () => {
+        queryDbPassword.mockResolvedValue(hashEncryptPassword("mockpassword"));
         changePassword.mockResolvedValue(true);
 
         const response = await request(app)
@@ -483,20 +526,18 @@ describe("Local user APIs", () => {
     });
 
     describe("Failed to change the password", () => {
-      test("should respond with a 404 status code when missing data", async () => {
+      test("should respond with a 400 status code when missing data", async () => {
         const response = await request(app)
           .post("/user/local/password")
           .send()
           .set("access_token", `Bearer ${userToken}`);
-        expect(response.statusCode).toBe(404);
+        expect(response.statusCode).toBe(400);
         expect(response.body.message).toBe("Incomplete data was provided");
       });
 
-      // test("should respond with a 401 status code when token expired or user not match", async () => {});
-
       test("should respond with a 400 status code when contains invalid input", async () => {
-        const newPassword = "newmockpassword`";
-        const oldPassword = "mockpassword'";
+        const newPassword = ASEEncryptPassword("newmockpassword`");
+        const oldPassword = ASEEncryptPassword("mockpassword'");
 
         const response = await request(app)
           .post("/user/local/password")
@@ -506,17 +547,37 @@ describe("Local user APIs", () => {
         expect(response.body.message).toBe("Invalid symbols are included");
       });
 
-      test("should respond with a 403 status code when database error", async () => {
+      // test("should respond with a 401 status code when token expired or user not match", async () => {});
+
+      test("should respond with a 500 status code when database error", async () => {
+        queryDbPassword.mockResolvedValue(hashEncryptPassword("mockpassword"));
         changePassword.mockResolvedValue(false);
 
         const response = await request(app)
           .post("/user/local/password")
           .send({ userId, newPassword, oldPassword })
           .set("access_token", `Bearer ${userToken}`);
-        expect(response.statusCode).toBe(403);
+        expect(response.statusCode).toBe(500);
+        expect(queryDbPassword.mock.calls.length).toBe(1);
         expect(changePassword.mock.calls.length).toBe(1);
         expect(response.body.message).toBe(
-          "Your request can not be authenticated. Try again."
+          "Your request cannot be processed. Try again."
+        );
+      });
+
+      test("should respond with a 404 status code when password not match", async () => {
+        const oldPassword = ASEEncryptPassword("fakepassword");
+
+        queryDbPassword.mockResolvedValue(hashEncryptPassword("mockpassword"));
+
+        const response = await request(app)
+          .post("/user/local/password")
+          .send({ userId, newPassword, oldPassword })
+          .set("access_token", `Bearer ${userToken}`);
+        expect(response.statusCode).toBe(404);
+        expect(queryDbPassword.mock.calls.length).toBe(1);
+        expect(response.body.message).toBe(
+          "The old password does not match the account"
         );
       });
     });
@@ -528,6 +589,7 @@ describe("Local user APIs", () => {
     // describe("Send reset password email successfully", () => {
     //   test("should respond with a 200 status code", async () => {});
     // });
+
     describe("Failed to send reset password email", () => {
       test("should respond with a 400 status code when missing email", async () => {
         const response = await request(app)
@@ -538,7 +600,7 @@ describe("Local user APIs", () => {
         expect(response.body.message).toBe("Required email is missing");
       });
 
-      test("should respond with a 400 status code when email does not exist", async () => {
+      test("should respond with a 404 status code when email does not exist", async () => {
         localUserExists.mockResolvedValue(false);
 
         const response = await request(app)
@@ -549,7 +611,7 @@ describe("Local user APIs", () => {
         expect(response.body.message).toBe("The email has not been registered");
       });
 
-      test("should respond with a 400 status code when account not activated", async () => {
+      test("should respond with a 401 status code when account not activated", async () => {
         localUserExists.mockResolvedValue({ user_id: 8, is_active: false });
         const sendStatus = true;
 
@@ -557,7 +619,7 @@ describe("Local user APIs", () => {
           .post("/user/local/password/reset")
           .send({ email })
           .set("Authorization", `${API_KEY}`);
-        expect(response.statusCode).toBe(403);
+        expect(response.statusCode).toBe(401);
         expect(response.body.message).toBe(
           `The email has not been activated. ${
             sendStatus
@@ -586,25 +648,27 @@ describe("Local user APIs", () => {
     });
 
     describe("Failed to delete the account", () => {
-      test("should respond with a 404 status code when missing user id", async () => {
+      test("should respond with a 400 status code when missing user id", async () => {
         const response = await request(app)
           .post("/user/local/delete")
           .send()
           .set("access_token", `Bearer ${userToken}`);
-        expect(response.statusCode).toBe(404);
+        expect(response.statusCode).toBe(400);
         expect(response.body.message).toBe("Incomplete data was provided");
       });
 
-      test("should respond with a 403 status code when database error", async () => {
+      // test("should respond with a 401 status code when token expired or id not match", async () => {});
+
+      test("should respond with a 500 status code when database error", async () => {
         deleteUser.mockResolvedValue(false);
 
         const response = await request(app)
           .post("/user/local/delete")
           .send({ userId })
           .set("access_token", `Bearer ${userToken}`);
-        expect(response.statusCode).toBe(403);
+        expect(response.statusCode).toBe(500);
         expect(response.body.message).toBe(
-          "Your request can not be completed. Try again."
+          "Your request cannot be completed. Try again."
         );
       });
     });
