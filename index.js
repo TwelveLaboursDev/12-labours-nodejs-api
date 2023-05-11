@@ -14,6 +14,8 @@ app.use(express.json());
 
 app.use(express.urlencoded({ extended: true }));
 
+app.get("/", (req, res) => res.send("Hello! Welcome to the 12labours portal login system."));
+
 const routes = require("./routes");
 app.use(routes);
 

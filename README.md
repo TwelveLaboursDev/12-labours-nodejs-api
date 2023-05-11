@@ -35,7 +35,7 @@ API_PORT="8085"
 USER_VERIFY_URL="{PORTAL URL}/verify"
 #Google authentication will redirect the user to the following page.
 #This need to be setup on google for it to work
-GOOGLE_REDIRECT_URI="{PORTAL URL}/login/callback"
+GOOGLE_REDIRECT_URL="{PORTAL URL}/login/callback"
 #A secret phase of your own choosing
 SECRET_KEY="SomeSecretKey"
 #Database server host
