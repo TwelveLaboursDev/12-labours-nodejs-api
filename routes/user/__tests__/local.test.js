@@ -30,7 +30,7 @@ const localUserRoutes = localUserRouter({
   updateUserInfo,
 });
 
-const API_KEY = process.env.API_KEY;
+const API_KEY = process.env.LOGIN_API_KEY;
 const userToken = signUserToken(8, "mockemail@gmail.com");
 
 describe("Local user APIs", () => {

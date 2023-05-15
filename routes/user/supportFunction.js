@@ -105,7 +105,7 @@ function validateInput(input) {
 function AESDecrypt(password) {
   const decrypted = CryptoJS.AES.decrypt(
     password,
-    process.env.SECRET_KEY
+    process.env.LOGIN_SECRET_KEY
   ).toString(CryptoJS.enc.Utf8);
   return decrypted;
 }

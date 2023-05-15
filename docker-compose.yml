@@ -2,12 +2,12 @@ services:
   server:
     image: 12laboursnodejsapi:latest
     environment:
-      API_PORT: ${API_PORT}
+      LOGIN_API_PORT: ${LOGIN_API_PORT}
+      LOGIN_API_KEY: ${LOGIN_API_KEY}
+      LOGIN_SECRET_KEY: ${LOGIN_SECRET_KEY}
       PASSWORD_RESET_URL: ${PASSWORD_RESET_URL}
       USER_VERIFY_URL: ${USER_VERIFY_URL}
       GOOGLE_REDIRECT_URL: ${GOOGLE_REDIRECT_URL}
-      API_KEY: ${API_KEY}
-      SECRET_KEY: ${SECRET_KEY}
       DB_HOST: ${DB_HOST}
       DB_PORT: ${DB_PORT}
       DB_USER: ${DB_USER}
@@ -18,7 +18,7 @@ services:
       SENDGRID_API_KEY: ${SENDGRID_API_KEY}
       SENDGRID_VERIFIED_SENDER: ${SENDGRID_VERIFIED_SENDER}
     ports:
-      - "${API_PORT}:${API_PORT}"
+      - "${LOGIN_API_PORT}:${LOGIN_API_PORT}"
 
   # pgadmin:
   #   image: dpage/pgadmin4

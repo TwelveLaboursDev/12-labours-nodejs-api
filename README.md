@@ -30,33 +30,37 @@ GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET
 
 ```bash
 #The following indicates which portal the api services should be deployed on
-API_PORT="8085"
-#The following should point to the verify page on the portal
-USER_VERIFY_URL="{PORTAL URL}/verify"
-#Google authentication will redirect the user to the following page.
-#This need to be setup on google for it to work
-GOOGLE_REDIRECT_URL="{PORTAL URL}/login/callback"
+LOGIN_API_PORT="8080"
+#An API Key to protect the server, this variable is required and
+#should be the same when starting the api and app server
+LOGIN_API_KEY="SomeAPIKey"
 #A secret phase of your own choosing
-SECRET_KEY="SomeSecretKey"
+LOGIN_SECRET_KEY="SomeSecretKey"
+
 #Database server host
 DB_HOST="localhost"
 #Database server port
 DB_PORT="5432"
 #Database user name
-DB_USER="12-labours"
+DB_USER="12labours"
 #Password of the DB_USER
 DB_PASSWORD="SomePassword"
 #Name for the database
 DB_NAME="12labours"
+
+#The following should point to the verify page on the portal
+USER_VERIFY_URL="{PORTAL URL}/verify"
+#Google authentication will redirect the user to the following page.
+#This need to be setup on google for it to work
+GOOGLE_REDIRECT_URL="{PORTAL URL}/login/callback"
+PASSWORD_RESET_URL="{PORTAL URL}/password-reset"
+
 #The following is the client id and secret from google.They are provided from the Credentials setup on Google Cloud. They are used for google login
 GOOGLE_CLIENT_ID=""
 GOOGLE_CLIENT_SECRET=""
 #Sendgrid email notification keys and sender email address
 SENDGRID_API_KEY=""
 SENDGRID_VERIFIED_SENDER=""
-#An API Key to protect the server, this variable is required and
-#should be the same when starting the api and app server
-API_KEY="SomeAPIKey"
 ```
 
 ## Starting up the server
