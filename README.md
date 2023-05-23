@@ -52,7 +52,7 @@ DB_NAME="12labours"
 USER_VERIFY_URL="{PORTAL URL}/verify"
 #Google authentication will redirect the user to the following page.
 #This need to be setup on google for it to work
-GOOGLE_REDIRECT_URL="{PORTAL URL}/login/callback"
+GOOGLE_REDIRECT_URI="{PORTAL URL}/login/callback"
 PASSWORD_RESET_URL="{PORTAL URL}/password-reset"
 
 #The following is the client id and secret from google.They are provided from the Credentials setup on Google Cloud. They are used for google login
