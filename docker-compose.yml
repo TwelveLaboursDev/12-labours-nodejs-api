@@ -1,0 +1,45 @@
+services:
+  server:
+    image: 12laboursnodejsapi:latest
+    environment:
+      LOGIN_API_PORT: ${LOGIN_API_PORT}
+      LOGIN_API_KEY: ${LOGIN_API_KEY}
+      LOGIN_SECRET_KEY: ${LOGIN_SECRET_KEY}
+      PASSWORD_RESET_URL: ${PASSWORD_RESET_URL}
+      USER_VERIFY_URL: ${USER_VERIFY_URL}
+      GOOGLE_REDIRECT_URI: ${GOOGLE_REDIRECT_URI}
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+      SENDGRID_API_KEY: ${SENDGRID_API_KEY}
+      SENDGRID_VERIFIED_SENDER: ${SENDGRID_VERIFIED_SENDER}
+    ports:
+      - "${LOGIN_API_PORT}:${LOGIN_API_PORT}"
+
+  pgadmin:
+    image: dpage/pgadmin4
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    volumes:
+      - data:/var/lib/pgadmin
+  
+  db:
+    image: 12labourspostgres:latest
+    restart: always
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    volumes:
+      - data:/var/lib/postgresql/data
+
+volumes:
+  data:
