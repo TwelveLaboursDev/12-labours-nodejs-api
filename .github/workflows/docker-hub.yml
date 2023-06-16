@@ -29,5 +29,5 @@ jobs:
 
       - name: Push Docker image
         run: |
-          docker push ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}
-          docker push ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.DB_IMAGE_NAME }}
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:latest
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.DB_IMAGE_NAME }}:latest
