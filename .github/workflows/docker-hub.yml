@@ -6,8 +6,8 @@ on:
       - "dev"
 
 env:
-  IMAGE_NAME: nodejsapi
-  DB_IMAGE_NAME: postgres
+  IMAGE_NAME: nodejsapi-dev
+  DB_IMAGE_NAME: postgres-dev
 
 jobs:
   build-and-push:
