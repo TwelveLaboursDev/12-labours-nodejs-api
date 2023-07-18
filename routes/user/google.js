@@ -18,7 +18,7 @@ function googleUserRouter(googleUserObject) {
         googleId
       );
       if (userFound) {
-        const token = signUserToken(userFound.user_id, email);
+        const token = signUserToken(userFound.user_id, email, "2h");
         res.status(200).send({ access_token: token });
       } else {
         res
@@ -39,7 +39,7 @@ function googleUserRouter(googleUserObject) {
         const userId = req.newUserId;
         const user = await googleUserObject.getProfileById(userId);
         if (user) {
-          const token = signUserToken(user.user_id, user.email);
+          const token = signUserToken(user.user_id, user.email, "2h");
           res.status(200).send({ user: user, access_token: token });
         } else {
           return res.status(404).json({

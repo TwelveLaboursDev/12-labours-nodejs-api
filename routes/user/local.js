@@ -165,7 +165,7 @@ function localUserRouter(localUserObject) {
           decryptCompare(decryptedPassword, dbPassword)
         ) {
           const user = await localUserObject.getProfileById(userFound.user_id);
-          const token = signUserToken(user.user_id, user.email);
+          const token = signUserToken(user.user_id, user.email, "2h");
           res.status(200).send({ user: user, access_token: token });
         } else {
           return res.status(404).json({

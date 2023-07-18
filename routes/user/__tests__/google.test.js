@@ -20,7 +20,7 @@ jest.mock("../supportFunction", () => ({
 }));
 
 const API_KEY = process.env.LOGIN_API_KEY;
-const mockToken = signUserToken(8, "mockemail@gmail.com");
+const mockToken = signUserToken(8, "mockemail@gmail.com", "2h");
 
 describe("Google user APIs", () => {
   const app = express();
