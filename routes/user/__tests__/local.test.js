@@ -31,7 +31,7 @@ const localUserRoutes = localUserRouter({
 });
 
 const API_KEY = process.env.LOGIN_API_KEY;
-const userToken = signUserToken(8, "mockemail@gmail.com");
+const userToken = signUserToken(8, "mockemail@gmail.com", "2h");
 
 describe("Local user APIs", () => {
   const app = express();
