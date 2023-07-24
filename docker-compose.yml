@@ -1,6 +1,6 @@
 services:
   server:
-    image: 12laboursnodejsapi:latest
+    image: 12labours/nodejsapi-dev:latest
     environment:
       LOGIN_API_PORT: ${LOGIN_API_PORT}
       LOGIN_API_KEY: ${LOGIN_API_KEY}
@@ -32,7 +32,7 @@ services:
       - data:/var/lib/pgadmin
   
   db:
-    image: 12labourspostgres:latest
+    image: 12labours/postgres-dev:latest
     restart: always
     environment:
       POSTGRES_USER: ${DB_USER}
