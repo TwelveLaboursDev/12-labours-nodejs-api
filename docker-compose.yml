@@ -1,5 +1,9 @@
+version: "3"
+
 services:
-  server:
+  loginbackend:
+    container_name: loginbackend
+    # image: 12labours/nodejsapi-dev:60sexpire
     image: 12labours/nodejsapi-dev:latest
     environment:
       LOGIN_API_PORT: ${LOGIN_API_PORT}
@@ -20,18 +24,20 @@ services:
     ports:
       - "${LOGIN_API_PORT}:${LOGIN_API_PORT}"
 
-  pgadmin:
+  pgadmin4:
+    container_name: pgadmin4
     image: dpage/pgadmin4
     restart: always
     environment:
-      PGADMIN_DEFAULT_EMAIL: admin@admin.com
-      PGADMIN_DEFAULT_PASSWORD: admin
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
     ports:
       - "5050:80"
     volumes:
-      - data:/var/lib/pgadmin
-  
-  db:
+      - pgadmin_data:/var/lib/pgadmin
+
+  postgresdb:
+    container_name: postgresdb
     image: 12labours/postgres-dev:latest
     restart: always
     environment:
@@ -39,7 +45,10 @@ services:
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: ${DB_NAME}
     volumes:
-      - data:/var/lib/postgresql/data
+      - db_data:/var/lib/postgresql/data
 
 volumes:
-  data:
+  db_data:
+    driver: local
+  pgadmin_data:
+    driver: local

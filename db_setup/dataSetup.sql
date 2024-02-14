@@ -72,5 +72,4 @@ insert into hospitals (hospital_name) values ('Whanganui Hospital');
 
 --Institutions data setup
 insert into institutions (institution_name) values('University of Auckland');
-insert into institutions (institution_name) values('Auckland University of Technology');
 
